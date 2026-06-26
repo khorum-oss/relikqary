@@ -1,4 +1,11 @@
 relikqary:
+  # Named, typed repositories, each addressed by a path prefix (/{repo}/...). There is no implicit
+  # repository at the root. Types: release (immutable), snapshot (overwritable), mixed (both).
+  repositories:
+    - name: releases
+      type: release
+    - name: snapshots
+      type: snapshot
   storage:
     # Storage backend: 'filesystem' (default) or 's3' (S3-compatible: AWS, DigitalOcean Spaces, MinIO).
     backend: filesystem

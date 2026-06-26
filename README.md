@@ -66,6 +66,20 @@ publishing {
 
 Relikqary listens on `http://localhost:8080`. Resolving (Maven or Gradle) needs no credentials.
 
+### Named repositories
+
+Relikqary serves **named, typed repositories** addressed by a path prefix — there is no implicit repo
+at the root. The defaults are `releases` (immutable) and `snapshots` (overwritable); point clients at
+`http://localhost:8080/releases` (or `/snapshots`). A repository's type governs what it accepts:
+
+| Type | Accepts | Existing target |
+|------|---------|-----------------|
+| `release` | release versions only (`-SNAPSHOT` → 400) | immutable (409, unless overwrite configured) |
+| `snapshot` | `-SNAPSHOT` only (release → 400) | overwritten |
+| `mixed` | both | release immutable, snapshot/metadata overwritten |
+
+Define repositories under `relikqary.repositories` (`{name, type}`); an unknown repo name returns 404.
+
 ### Object storage (S3 / DigitalOcean Spaces)
 
 Set `relikqary.storage.backend=s3` and point it at any S3-compatible endpoint (AWS S3, DigitalOcean

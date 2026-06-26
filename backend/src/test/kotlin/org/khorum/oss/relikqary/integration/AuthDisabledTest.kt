@@ -43,7 +43,7 @@ class AuthDisabledTest {
 
     @Test
     fun `publish without credentials succeeds when auth is disabled`() {
-        val request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:$port/com/example/local/1.0.0/local-1.0.0.jar"))
+        val request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:$port/releases/com/example/local/1.0.0/local-1.0.0.jar"))
             .header("Content-Type", "application/octet-stream")
             .PUT(HttpRequest.BodyPublishers.ofByteArray(Random.nextBytes(128)))
             .build()

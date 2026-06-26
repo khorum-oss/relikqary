@@ -1,12 +1,13 @@
 package org.khorum.oss.relikqary.unit
 
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.khorum.oss.relikqary.config.PublishProperties
 import org.khorum.oss.relikqary.config.PublishProperties.ReleasePolicy
 import org.khorum.oss.relikqary.coordinate.RepositoryPath
+import org.khorum.oss.relikqary.ingestion.PublishDecision
 import org.khorum.oss.relikqary.ingestion.RepublishPolicy
+import org.khorum.oss.relikqary.repository.RepositoryType
 
 class RepublishPolicyTest {
 
@@ -14,30 +15,55 @@ class RepublishPolicyTest {
     private val snapshot = RepositoryPath.of("com/example/widget/1.1.0-SNAPSHOT/widget-1.1.0-SNAPSHOT.jar")
     private val metadata = RepositoryPath.of("com/example/widget/maven-metadata.xml")
 
-    private fun policy(p: ReleasePolicy) = RepublishPolicy(PublishProperties(releasePolicy = p))
+    private fun policy(p: ReleasePolicy = ReleasePolicy.REJECT) = RepublishPolicy(PublishProperties(releasePolicy = p))
+
+    // --- RELEASE repo ---
 
     @Test
-    fun `allows publishing a brand-new path regardless of policy`() {
-        assertTrue(policy(ReleasePolicy.REJECT).isAllowed(release, alreadyExists = false))
+    fun `release repo accepts a new release`() {
+        assertEquals(PublishDecision.ACCEPT, policy().evaluate(RepositoryType.RELEASE, release, alreadyExists = false))
     }
 
     @Test
-    fun `rejects re-publishing an existing release under the default policy`() {
-        assertFalse(policy(ReleasePolicy.REJECT).isAllowed(release, alreadyExists = true))
+    fun `release repo rejects an existing release as immutable`() {
+        assertEquals(PublishDecision.REJECT_IMMUTABLE, policy().evaluate(RepositoryType.RELEASE, release, alreadyExists = true))
     }
 
     @Test
-    fun `allows re-publishing an existing release when overwrite is configured`() {
-        assertTrue(policy(ReleasePolicy.OVERWRITE).isAllowed(release, alreadyExists = true))
+    fun `release repo allows overwrite when configured`() {
+        val decision = policy(ReleasePolicy.OVERWRITE).evaluate(RepositoryType.RELEASE, release, alreadyExists = true)
+        assertEquals(PublishDecision.ACCEPT, decision)
     }
 
     @Test
-    fun `always allows re-publishing an existing snapshot`() {
-        assertTrue(policy(ReleasePolicy.REJECT).isAllowed(snapshot, alreadyExists = true))
+    fun `release repo rejects a snapshot coordinate as type mismatch`() {
+        assertEquals(PublishDecision.REJECT_TYPE, policy().evaluate(RepositoryType.RELEASE, snapshot, alreadyExists = false))
     }
 
     @Test
-    fun `always allows overwriting artifact metadata`() {
-        assertTrue(policy(ReleasePolicy.REJECT).isAllowed(metadata, alreadyExists = true))
+    fun `release repo always allows metadata`() {
+        assertEquals(PublishDecision.ACCEPT, policy().evaluate(RepositoryType.RELEASE, metadata, alreadyExists = true))
+    }
+
+    // --- SNAPSHOT repo ---
+
+    @Test
+    fun `snapshot repo accepts and overwrites snapshots`() {
+        assertEquals(PublishDecision.ACCEPT, policy().evaluate(RepositoryType.SNAPSHOT, snapshot, alreadyExists = false))
+        assertEquals(PublishDecision.ACCEPT, policy().evaluate(RepositoryType.SNAPSHOT, snapshot, alreadyExists = true))
+    }
+
+    @Test
+    fun `snapshot repo rejects a release coordinate as type mismatch`() {
+        assertEquals(PublishDecision.REJECT_TYPE, policy().evaluate(RepositoryType.SNAPSHOT, release, alreadyExists = false))
+    }
+
+    // --- MIXED repo ---
+
+    @Test
+    fun `mixed repo follows the version-string rule`() {
+        assertEquals(PublishDecision.ACCEPT, policy().evaluate(RepositoryType.MIXED, snapshot, alreadyExists = true))
+        assertEquals(PublishDecision.REJECT_IMMUTABLE, policy().evaluate(RepositoryType.MIXED, release, alreadyExists = true))
+        assertEquals(PublishDecision.ACCEPT, policy().evaluate(RepositoryType.MIXED, release, alreadyExists = false))
     }
 }

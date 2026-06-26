@@ -68,22 +68,22 @@ class AuthPublishTest {
 
     @Test
     fun `publish without credentials is rejected with 401`() {
-        assertEquals(401, put("/com/example/auth/1.0.0/auth-1.0.0.jar", Random.nextBytes(64)))
+        assertEquals(401, put("/releases/com/example/auth/1.0.0/auth-1.0.0.jar", Random.nextBytes(64)))
     }
 
     @Test
     fun `publish with wrong credentials is rejected with 401`() {
-        assertEquals(401, put("/com/example/auth/1.0.1/auth-1.0.1.jar", Random.nextBytes(64), basic("publisher", "wrong")))
+        assertEquals(401, put("/releases/com/example/auth/1.0.1/auth-1.0.1.jar", Random.nextBytes(64), basic("publisher", "wrong")))
     }
 
     @Test
     fun `authenticated non-publisher is forbidden with 403`() {
-        assertEquals(403, put("/com/example/auth/1.0.2/auth-1.0.2.jar", Random.nextBytes(64), basic("reader", "read-secret")))
+        assertEquals(403, put("/releases/com/example/auth/1.0.2/auth-1.0.2.jar", Random.nextBytes(64), basic("reader", "read-secret")))
     }
 
     @Test
     fun `valid publisher can publish, then anyone can read`() {
-        val path = "/com/example/auth/1.0.3/auth-1.0.3.jar"
+        val path = "/releases/com/example/auth/1.0.3/auth-1.0.3.jar"
         assertEquals(201, put(path, Random.nextBytes(256), basic("publisher", "pub-secret")))
         // Read stays open — no credentials required.
         assertEquals(200, get(path))

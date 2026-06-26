@@ -50,7 +50,7 @@ class PublishResolveRoundTripTest {
     fun `publish from gradle then resolve from maven and gradle byte-for-byte`(@TempDir work: Path) {
         // Unique release version so neither client can serve a cached copy — resolution must hit Relikqary.
         val version = "1.0.0-r${System.currentTimeMillis()}"
-        val url = "http://127.0.0.1:$port"
+        val url = "http://127.0.0.1:$port/releases"
 
         // 1. Publish from a real Gradle build (maven-publish) WITH credentials. SC-001.
         val publisher = work.resolve("publisher")
@@ -58,12 +58,12 @@ class PublishResolveRoundTripTest {
         runProcess(listOf(gradlew, "-p", publisher.toString(), "publish", "--no-daemon", "--console=plain", "--stacktrace"))
 
         // Stored byte-for-byte, with artifact metadata present (FR-002, research.md §3 source guard).
-        val coordDir = storageRoot.resolve("com/example/widget/$version")
+        val coordDir = storageRoot.resolve("releases/com/example/widget/$version")
         val storedJar = coordDir.resolve("widget-$version.jar")
         assertTrue(Files.isRegularFile(storedJar)) { "published jar not stored" }
         assertTrue(Files.isRegularFile(coordDir.resolve("widget-$version.pom"))) { "published pom not stored" }
         assertTrue(
-            Files.isRegularFile(storageRoot.resolve("com/example/widget/maven-metadata.xml")),
+            Files.isRegularFile(storageRoot.resolve("releases/com/example/widget/maven-metadata.xml")),
         ) { "maven-metadata.xml not produced by publish — version discovery would have no source" }
 
         val publishedBytes = Files.readAllBytes(publisher.resolve("build/libs/widget-$version.jar"))
@@ -169,14 +169,14 @@ class PublishResolveRoundTripTest {
     fun `publish without credentials is rejected when auth is enabled`(@TempDir work: Path) {
         val version = "1.0.0-noauth-r${System.currentTimeMillis()}"
         val publisher = work.resolve("publisher-nocreds")
-        writePublisher(publisher, version, "http://127.0.0.1:$port", withCredentials = false)
+        writePublisher(publisher, version, "http://127.0.0.1:$port/releases", withCredentials = false)
         val exit = runProcessExitCode(
             listOf(gradlew, "-p", publisher.toString(), "publish", "--no-daemon", "--console=plain"),
         )
         // Gradle's publish fails because the server returns 401 (SC-001 negative).
         org.junit.jupiter.api.Assertions.assertNotEquals(0, exit) { "no-credential publish should have failed" }
         org.junit.jupiter.api.Assertions.assertFalse(
-            Files.exists(storageRoot.resolve("com/example/widget/$version/widget-$version.jar")),
+            Files.exists(storageRoot.resolve("releases/com/example/widget/$version/widget-$version.jar")),
         ) { "an unauthorized artifact was stored" }
     }
 
