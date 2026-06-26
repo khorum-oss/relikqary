@@ -1,0 +1,18 @@
+relikqary:
+  storage:
+    # Final storage location for published artifacts. Override per environment
+    # (e.g. --relikqary.storage.filesystem.root=/var/lib/relikqary) with no code change.
+    filesystem:
+      root: ${RELIKQARY_STORAGE_ROOT:./relikqary-store}
+  publish:
+    # Re-publish policy for an existing RELEASE coordinate: reject (default, immutable)
+    # or overwrite. SNAPSHOT coordinates are always overwritable.
+    release-policy: reject
+
+spring:
+  application:
+    name: relikqary
+  servlet:
+    multipart:
+      # Artifacts are streamed as raw request bodies, not multipart form uploads.
+      enabled: false
