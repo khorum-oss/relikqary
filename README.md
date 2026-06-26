@@ -66,11 +66,29 @@ publishing {
 
 Relikqary listens on `http://localhost:8080`. Resolving (Maven or Gradle) needs no credentials.
 
+### Object storage (S3 / DigitalOcean Spaces)
+
+Set `relikqary.storage.backend=s3` and point it at any S3-compatible endpoint (AWS S3, DigitalOcean
+Spaces, MinIO). Credentials come from the environment — never commit them.
+
+```bash
+RELIKQARY_S3_ENDPOINT=https://nyc3.digitaloceanspaces.com \
+RELIKQARY_S3_BUCKET=my-artifacts \
+RELIKQARY_S3_ACCESS_KEY=... RELIKQARY_S3_SECRET_KEY=... \
+./gradlew :backend:bootRun --args='--relikqary.storage.backend=s3'
+```
+
 ## Configuration
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `relikqary.storage.filesystem.root` | `./relikqary-store` | Directory where artifacts are persisted |
+| `relikqary.storage.backend` | `filesystem` | `filesystem` or `s3` (S3-compatible object storage) |
+| `relikqary.storage.filesystem.root` | `./relikqary-store` | Directory where artifacts are persisted (filesystem backend) |
+| `relikqary.storage.s3.endpoint` | _(none)_ | S3 endpoint override (e.g. DigitalOcean Spaces / MinIO) |
+| `relikqary.storage.s3.region` | `us-east-1` | S3 region |
+| `relikqary.storage.s3.bucket` | _(none)_ | Target bucket (must already exist) |
+| `relikqary.storage.s3.access-key` / `secret-key` | _(none)_ | S3 credentials (supply via env) |
+| `relikqary.storage.s3.path-style-access` | `true` | Path-style addressing (needed by MinIO/Spaces) |
 | `relikqary.publish.release-policy` | `reject` | `reject` or `overwrite` for re-publishing an existing release |
 | `relikqary.security.enabled` | `true` | Set `false` to disable auth (open publishing) — used by the `local` profile |
 | `relikqary.security.users` | _(empty)_ | Publishers: `{username, password ({bcrypt}…/{noop}…), roles}` |

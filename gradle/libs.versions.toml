@@ -8,10 +8,16 @@ kover = "0.9.1"
 sonarqube = "7.0.0.6105"
 kotlin-logging = "7.0.3"
 mockk = "1.13.17"
+awsSdk = "2.46.17"
+s3mock = "5.1.0"
+testcontainers = "1.21.4"
 
 [libraries]
 # Kotlin
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+
+# AWS S3 (object-storage backend)
+aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "awsSdk" }
 
 # Spring Boot (versions managed by the Spring Boot BOM via the dependency-management plugin)
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
@@ -25,6 +31,9 @@ kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = 
 
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+testcontainers-minio = { module = "org.testcontainers:minio", version.ref = "testcontainers" }
+# s3mock-exec (runnable jar) is consumed via a dedicated configuration in backend/build.gradle.kts
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

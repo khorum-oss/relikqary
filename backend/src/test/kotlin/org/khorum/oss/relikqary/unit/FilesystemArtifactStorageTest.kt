@@ -15,7 +15,7 @@ import kotlin.random.Random
 class FilesystemArtifactStorageTest {
 
     private fun storage(root: Path) =
-        FilesystemArtifactStorage(StorageProperties(StorageProperties.Filesystem(root = root.toString())))
+        FilesystemArtifactStorage(StorageProperties(filesystem = StorageProperties.Filesystem(root = root.toString())))
 
     @Test
     fun `stores and serves bytes byte-for-byte`(@TempDir root: Path) {

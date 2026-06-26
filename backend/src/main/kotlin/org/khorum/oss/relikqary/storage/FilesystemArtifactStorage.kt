@@ -1,6 +1,7 @@
 package org.khorum.oss.relikqary.storage
 
 import org.khorum.oss.relikqary.config.StorageProperties
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import java.io.InputStream
 import java.nio.file.Files
@@ -14,6 +15,7 @@ import java.nio.file.StandardCopyOption
  * resolved path is constrained to stay within the configured root as defence-in-depth (FR-012).
  */
 @Component
+@ConditionalOnProperty(name = ["relikqary.storage.backend"], havingValue = "filesystem", matchIfMissing = true)
 class FilesystemArtifactStorage(props: StorageProperties) : ArtifactStorage {
 
     private val root: Path = Path.of(props.filesystem.root).toAbsolutePath().normalize()
