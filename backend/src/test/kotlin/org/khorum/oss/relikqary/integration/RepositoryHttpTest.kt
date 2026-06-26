@@ -21,7 +21,12 @@ import kotlin.random.Random
  * real servlet container with a real filesystem store wired via [DynamicPropertySource]. Uses the JDK
  * HTTP client so raw request paths (e.g. encoded traversal) reach the server verbatim.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    // This suite exercises the repository protocol itself; authentication is covered separately
+    // in AuthPublishTest, so run with auth disabled to keep these cases focused.
+    properties = ["relikqary.security.enabled=false"],
+)
 class RepositoryHttpTest {
 
     @LocalServerPort

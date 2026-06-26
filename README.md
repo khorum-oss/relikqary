@@ -27,11 +27,44 @@ Requires JDK 21 (provisioned by the Gradle toolchain).
 
 ```bash
 ./gradlew build        # compile + detekt + tests (incl. a real publish/resolve round-trip) + coverage
-./gradlew :backend:bootRun --args='--relikqary.storage.filesystem.root=/tmp/relikqary-store'
 ```
 
-Relikqary listens on `http://localhost:8080`. Point a Gradle `maven-publish` repository (or a Maven
-`<repository>`) at that URL to publish and resolve.
+### Run locally (auth disabled — no login)
+
+```bash
+./gradlew :backend:bootRun --args='--spring.profiles.active=local'
+```
+
+The `local` profile disables authentication and stores artifacts under `./relikqary-store-local`, so
+a local Gradle `maven-publish` needs no credentials.
+
+### Run with authentication (publishing requires credentials)
+
+By default, authentication is **on**: resolving stays open, but publishing requires a configured user
+with the `PUBLISH` role. Configure a publisher and run:
+
+```bash
+./gradlew :backend:bootRun --args='\
+  --relikqary.storage.filesystem.root=/tmp/relikqary-store \
+  --relikqary.security.users[0].username=ci \
+  --relikqary.security.users[0].password={bcrypt}$2a$10$your-bcrypt-hash \
+  --relikqary.security.users[0].roles[0]=PUBLISH'
+```
+
+Then publish from Gradle with credentials:
+
+```kotlin
+publishing {
+    repositories {
+        maven {
+            url = uri("http://localhost:8080")
+            credentials { username = "ci"; password = "..." }
+        }
+    }
+}
+```
+
+Relikqary listens on `http://localhost:8080`. Resolving (Maven or Gradle) needs no credentials.
 
 ## Configuration
 
@@ -39,3 +72,5 @@ Relikqary listens on `http://localhost:8080`. Point a Gradle `maven-publish` rep
 |----------|---------|-------------|
 | `relikqary.storage.filesystem.root` | `./relikqary-store` | Directory where artifacts are persisted |
 | `relikqary.publish.release-policy` | `reject` | `reject` or `overwrite` for re-publishing an existing release |
+| `relikqary.security.enabled` | `true` | Set `false` to disable auth (open publishing) — used by the `local` profile |
+| `relikqary.security.users` | _(empty)_ | Publishers: `{username, password ({bcrypt}…/{noop}…), roles}` |

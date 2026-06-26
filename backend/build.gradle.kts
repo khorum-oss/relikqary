@@ -25,11 +25,13 @@ dependencies {
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
 
     implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.security)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.reflect)
     implementation(libs.kotlin.logging)
 
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.spring.security.test)
     testImplementation(libs.mockk)
 }
 

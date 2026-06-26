@@ -8,6 +8,17 @@ relikqary:
     # Re-publish policy for an existing RELEASE coordinate: reject (default, immutable)
     # or overwrite. SNAPSHOT coordinates are always overwritable.
     release-policy: reject
+  security:
+    # Authentication is ON by default; publishing (PUT) requires a configured user with the
+    # PUBLISH role, while reads (GET/HEAD) stay open. Set enabled: false to disable auth entirely
+    # (e.g. local development — see the 'local' profile).
+    enabled: true
+    # Configure publishers here (passwords carry an encoder prefix, e.g. {bcrypt}... or {noop}...):
+    # users:
+    #   - username: ci
+    #     password: "{bcrypt}$2a$10$..."
+    #     roles: [PUBLISH]
+    users: []
 
 spring:
   application:

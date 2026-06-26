@@ -35,6 +35,10 @@ class PublishResolveRoundTripTest {
         @JvmStatic
         fun storageProps(registry: DynamicPropertyRegistry) {
             registry.add("relikqary.storage.filesystem.root") { storageRoot.toString() }
+            // Auth is enabled by default; configure a publisher so credentialed publishing works.
+            registry.add("relikqary.security.users[0].username") { "ci" }
+            registry.add("relikqary.security.users[0].password") { "{noop}ci-secret" }
+            registry.add("relikqary.security.users[0].roles[0]") { "PUBLISH" }
         }
     }
 
@@ -48,9 +52,9 @@ class PublishResolveRoundTripTest {
         val version = "1.0.0-r${System.currentTimeMillis()}"
         val url = "http://127.0.0.1:$port"
 
-        // 1. Publish from a real Gradle build (maven-publish). SC-001.
+        // 1. Publish from a real Gradle build (maven-publish) WITH credentials. SC-001.
         val publisher = work.resolve("publisher")
-        writePublisher(publisher, version, url)
+        writePublisher(publisher, version, url, withCredentials = true)
         runProcess(listOf(gradlew, "-p", publisher.toString(), "publish", "--no-daemon", "--console=plain", "--stacktrace"))
 
         // Stored byte-for-byte, with artifact metadata present (FR-002, research.md §3 source guard).
@@ -96,7 +100,7 @@ class PublishResolveRoundTripTest {
         assertArrayEquals(mavenBytes, gradleBytes) { "maven and gradle resolved different bytes" }
     }
 
-    private fun writePublisher(dir: Path, version: String, url: String) {
+    private fun writePublisher(dir: Path, version: String, url: String, withCredentials: Boolean) {
         Files.createDirectories(dir.resolve("src/main/java/com/example"))
         dir.resolve("settings.gradle.kts").writeText("""rootProject.name = "widget"""" + "\n")
         dir.resolve("src/main/java/com/example/Widget.java").writeText(
@@ -107,6 +111,16 @@ class PublishResolveRoundTripTest {
             }
             """.trimIndent(),
         )
+        val credentials = if (withCredentials) {
+            """
+                        credentials {
+                            username = "ci"
+                            password = "ci-secret"
+                        }
+            """.trimIndent()
+        } else {
+            ""
+        }
         dir.resolve("build.gradle.kts").writeText(
             """
             plugins {
@@ -121,6 +135,7 @@ class PublishResolveRoundTripTest {
                     maven {
                         url = uri("$url")
                         isAllowInsecureProtocol = true
+                        $credentials
                     }
                 }
             }
@@ -150,13 +165,35 @@ class PublishResolveRoundTripTest {
         )
     }
 
+    @Test
+    fun `publish without credentials is rejected when auth is enabled`(@TempDir work: Path) {
+        val version = "1.0.0-noauth-r${System.currentTimeMillis()}"
+        val publisher = work.resolve("publisher-nocreds")
+        writePublisher(publisher, version, "http://127.0.0.1:$port", withCredentials = false)
+        val exit = runProcessExitCode(
+            listOf(gradlew, "-p", publisher.toString(), "publish", "--no-daemon", "--console=plain"),
+        )
+        // Gradle's publish fails because the server returns 401 (SC-001 negative).
+        org.junit.jupiter.api.Assertions.assertNotEquals(0, exit) { "no-credential publish should have failed" }
+        org.junit.jupiter.api.Assertions.assertFalse(
+            Files.exists(storageRoot.resolve("com/example/widget/$version/widget-$version.jar")),
+        ) { "an unauthorized artifact was stored" }
+    }
+
     private fun runProcess(command: List<String>) {
+        check(runProcessExitCode(command) == 0) { "process failed: ${command.joinToString(" ")}" }
+    }
+
+    private fun runProcessExitCode(command: List<String>): Int {
         val process = ProcessBuilder(command)
             .directory(rootProjectDir)
             .redirectErrorStream(true)
             .start()
         val output = process.inputStream.bufferedReader().readText()
         check(process.waitFor(5, TimeUnit.MINUTES)) { "timed out: ${command.joinToString(" ")}\n$output" }
-        check(process.exitValue() == 0) { "exit ${process.exitValue()}: ${command.joinToString(" ")}\n$output" }
+        if (process.exitValue() != 0) {
+            System.err.println("[process exit ${process.exitValue()}] ${command.joinToString(" ")}\n$output")
+        }
+        return process.exitValue()
     }
 }

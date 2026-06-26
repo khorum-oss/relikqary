@@ -15,7 +15,9 @@ kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 
 # Spring Boot (versions managed by the Spring Boot BOM via the dependency-management plugin)
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-security-test = { module = "org.springframework.security:spring-security-test" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
 
 # Logging
