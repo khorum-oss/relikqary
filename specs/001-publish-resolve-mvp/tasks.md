@@ -34,14 +34,14 @@ Single Spring Boot `backend` module (plan.md "Structure Decision"):
 **Purpose**: Realize the `backend` module and bring the inherited Konstellation build in line with the
 constitution (research.md §8). Order matters where the same build file is touched.
 
-- [ ] T001 Create the `backend` module source tree (`backend/src/main/kotlin/org/khorum/oss/relikqary/` with empty `protocol/ingestion/storage/coordinate/config` package dirs and `backend/src/test/kotlin/org/khorum/oss/relikqary/{unit,integration}/`) per plan.md
-- [ ] T002 Add Spring Boot 4.1.x, Spring Web, Kotlin (jackson) and test deps (Spring Boot Test, Gradle TestKit, maven-invoker, MockK) to `gradle/libs.versions.toml`
-- [ ] T003 Create `backend/build.gradle.kts` applying the Spring Boot + Kotlin plugins, JDK 21 toolchain, and the catalog dependencies; declare the Spring Boot main class
-- [ ] T004 Clean root `build.gradle.kts`: bump toolchain 17→21, remove the `khorum.*` plugin aliases / Micronaut usage, delete the `project(":dsl")` references in `koverMergedReport` and the `sonar` `jacoco.xmlReportPaths`, and point Sonar coverage at the `backend` module
-- [ ] T005 Remove inherited cruft from `gradle.properties` (drop `micronautVersion`, `ksp.useKSP2`) and from `settings.gradle.kts` confirm `includeModules("backend")` resolves to the new module
-- [ ] T006 [P] Add detekt config and Kover setup for the `backend` module (zero-violation gate, coverage verification) per Principle III
-- [ ] T007 Enable dependency verification (`org.gradle.dependency.verification=strict` in `gradle.properties`) and regenerate `gradle/verification-metadata.xml` to cover the new Spring/test dependencies
-- [ ] T008 [P] Create `backend/src/main/kotlin/org/khorum/oss/relikqary/RelikqaryApplication.kt` (Spring Boot entrypoint) and `backend/src/main/resources/application.yml` with default `relikqary.storage.*` and `relikqary.publish.*` keys
+- [x] T001 Create the `backend` module source tree (`backend/src/main/kotlin/org/khorum/oss/relikqary/` with empty `protocol/ingestion/storage/coordinate/config` package dirs and `backend/src/test/kotlin/org/khorum/oss/relikqary/{unit,integration}/`) per plan.md
+- [x] T002 Add Spring Boot 4.1.x, Spring Web, Kotlin (jackson) and test deps (Spring Boot Test, Gradle TestKit, maven-invoker, MockK) to `gradle/libs.versions.toml`
+- [x] T003 Create `backend/build.gradle.kts` applying the Spring Boot + Kotlin plugins, JDK 21 toolchain, and the catalog dependencies; declare the Spring Boot main class
+- [x] T004 Clean root `build.gradle.kts`: bump toolchain 17→21, remove the `khorum.*` plugin aliases / Micronaut usage, delete the `project(":dsl")` references in `koverMergedReport` and the `sonar` `jacoco.xmlReportPaths`, and point Sonar coverage at the `backend` module
+- [x] T005 Remove inherited cruft from `gradle.properties` (drop `micronautVersion`, `ksp.useKSP2`) and from `settings.gradle.kts` confirm `includeModules("backend")` resolves to the new module
+- [x] T006 [P] Add detekt config and Kover setup for the `backend` module (zero-violation gate, coverage verification) per Principle III
+- [x] T007 Enable dependency verification (`org.gradle.dependency.verification=strict` in `gradle.properties`) and regenerate `gradle/verification-metadata.xml` to cover the new Spring/test dependencies
+- [x] T008 [P] Create `backend/src/main/kotlin/org/khorum/oss/relikqary/RelikqaryApplication.kt` (Spring Boot entrypoint) and `backend/src/main/resources/application.yml` with default `relikqary.storage.*` and `relikqary.publish.*` keys
 
 **Checkpoint**: `./gradlew :backend:compileKotlin` succeeds and the app boots with an empty controller.
 
@@ -54,12 +54,12 @@ storage abstraction, configuration, HTTP routing skeleton with clean 404).
 
 **⚠️ CRITICAL**: No user story work begins until this phase is complete.
 
-- [ ] T009 [P] Implement the coordinate + Maven-layout model in `backend/src/main/kotlin/org/khorum/oss/relikqary/coordinate/` (parse a request path into group/artifact/version/filename, classify RELEASE vs SNAPSHOT, map coordinate↔layout path) per data-model.md
-- [ ] T010 [P] Define the `ArtifactStorage` interface (`exists/get/put` keyed by repo-layout path) in `backend/src/main/kotlin/org/khorum/oss/relikqary/storage/`
-- [ ] T011 Implement `FilesystemArtifactStorage` in `backend/src/main/kotlin/org/khorum/oss/relikqary/storage/` (streaming read/write, atomic temp-file-then-move, root from config) — depends on T010
-- [ ] T012 [P] Implement `@ConfigurationProperties` for storage location (`relikqary.storage.filesystem.root`) and republish policy (`relikqary.publish.release-policy`) in `backend/src/main/kotlin/org/khorum/oss/relikqary/config/`
-- [ ] T013 Implement the repository HTTP controller skeleton in `backend/src/main/kotlin/org/khorum/oss/relikqary/protocol/`: wildcard `**` path mapping, path→storage-key validation rejecting traversal/escape segments (`..`, absolute, empty) with `400` (FR-012), and a clean `404` for absent keys (FR-008) — depends on T009, T010
-- [ ] T014 [P] Unit tests for coordinate parsing/classification, `FilesystemArtifactStorage` (using `@TempDir`), and path-traversal rejection (FR-012/SC-008 — assert `../` and absolute escapes cannot read/write outside the root) in `backend/src/test/kotlin/org/khorum/oss/relikqary/unit/`
+- [x] T009 [P] Implement the coordinate + Maven-layout model in `backend/src/main/kotlin/org/khorum/oss/relikqary/coordinate/` (parse a request path into group/artifact/version/filename, classify RELEASE vs SNAPSHOT, map coordinate↔layout path) per data-model.md
+- [x] T010 [P] Define the `ArtifactStorage` interface (`exists/get/put` keyed by repo-layout path) in `backend/src/main/kotlin/org/khorum/oss/relikqary/storage/`
+- [x] T011 Implement `FilesystemArtifactStorage` in `backend/src/main/kotlin/org/khorum/oss/relikqary/storage/` (streaming read/write, atomic temp-file-then-move, root from config) — depends on T010
+- [x] T012 [P] Implement `@ConfigurationProperties` for storage location (`relikqary.storage.filesystem.root`) and republish policy (`relikqary.publish.release-policy`) in `backend/src/main/kotlin/org/khorum/oss/relikqary/config/`
+- [x] T013 Implement the repository HTTP controller skeleton in `backend/src/main/kotlin/org/khorum/oss/relikqary/protocol/`: wildcard `**` path mapping, path→storage-key validation rejecting traversal/escape segments (`..`, absolute, empty) with `400` (FR-012), and a clean `404` for absent keys (FR-008) — depends on T009, T010
+- [x] T014 [P] Unit tests for coordinate parsing/classification, `FilesystemArtifactStorage` (using `@TempDir`), and path-traversal rejection (FR-012/SC-008 — assert `../` and absolute escapes cannot read/write outside the root) in `backend/src/test/kotlin/org/khorum/oss/relikqary/unit/`
 
 **Checkpoint**: Storage, config, and routing exist; GET of an unknown path returns 404. User stories can begin.
 
@@ -75,14 +75,14 @@ succeeds and all uploaded files exist in the configured store, byte-identical (S
 
 ### Tests for User Story 1 (write first; ensure they FAIL before implementation) ⚠️
 
-- [ ] T015 [P] [US1] Integration test in `backend/src/test/kotlin/org/khorum/oss/relikqary/integration/`: `@SpringBootTest(RANDOM_PORT)` with the store root injected via `@DynamicPropertySource` → `@TempDir`, drive a real Gradle `maven-publish` (Gradle TestKit) and assert BUILD SUCCESSFUL + stored files byte-for-byte equal to the published ones, AND assert `maven-metadata.xml` actually landed in storage (research.md §3 verification guard)
-- [ ] T016 [P] [US1] Unit test for `RepublishPolicy` in `backend/src/test/kotlin/org/khorum/oss/relikqary/unit/` (existing RELEASE → reject; existing SNAPSHOT → overwrite; policy override). Add an integration assertion (in the US1 or US2 round-trip test) that a SNAPSHOT re-publish replaces stored contents while a RELEASE re-publish returns 409 (SC-007)
+- [x] T015 [P] [US1] Integration test in `backend/src/test/kotlin/org/khorum/oss/relikqary/integration/`: `@SpringBootTest(RANDOM_PORT)` with the store root injected via `@DynamicPropertySource` → `@TempDir`, drive a real Gradle `maven-publish` (Gradle TestKit) and assert BUILD SUCCESSFUL + stored files byte-for-byte equal to the published ones, AND assert `maven-metadata.xml` actually landed in storage (research.md §3 verification guard)
+- [x] T016 [P] [US1] Unit test for `RepublishPolicy` in `backend/src/test/kotlin/org/khorum/oss/relikqary/unit/` (existing RELEASE → reject; existing SNAPSHOT → overwrite; policy override). Add an integration assertion (in the US1 or US2 round-trip test) that a SNAPSHOT re-publish replaces stored contents while a RELEASE re-publish returns 409 (SC-007)
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Implement `RepublishPolicy` in `backend/src/main/kotlin/org/khorum/oss/relikqary/ingestion/` (classify coordinate, apply configured release policy) — depends on T009, T012
-- [ ] T018 [US1] Implement `PUT` handling in the protocol controller (`backend/.../protocol/`): read the request body stream, consult `RepublishPolicy`, persist via `ArtifactStorage`, return 201/200, or 409 on release conflict leaving stored bytes unchanged (FR-010, contracts/repository-http.md) — depends on T013, T011, T017
-- [ ] T019 [US1] Ensure faithful storage: no transformation of bytes/sidecars on the write path; verify checksum/signature sidecars are stored as received (FR-003, FR-006, FR-009)
+- [x] T017 [US1] Implement `RepublishPolicy` in `backend/src/main/kotlin/org/khorum/oss/relikqary/ingestion/` (classify coordinate, apply configured release policy) — depends on T009, T012
+- [x] T018 [US1] Implement `PUT` handling in the protocol controller (`backend/.../protocol/`): read the request body stream, consult `RepublishPolicy`, persist via `ArtifactStorage`, return 201/200, or 409 on release conflict leaving stored bytes unchanged (FR-010, contracts/repository-http.md) — depends on T013, T011, T017
+- [x] T019 [US1] Ensure faithful storage: no transformation of bytes/sidecars on the write path; verify checksum/signature sidecars are stored as received (FR-003, FR-006, FR-009)
 
 **Checkpoint**: A real Gradle publish lands byte-identical files in the store; release re-publish is rejected.
 
@@ -98,14 +98,14 @@ resolve and assert both download identical, checksum-verified files (SC-002, SC-
 
 ### Tests for User Story 2 (write first; ensure they FAIL before implementation) ⚠️
 
-- [ ] T020 [P] [US2] Integration test in `backend/src/test/kotlin/org/khorum/oss/relikqary/integration/`: pre-seed (or publish via US1) a coordinate, then resolve with a real Maven client (maven-invoker) and assert download + checksum verification (SC-002)
-- [ ] T021 [P] [US2] Integration test: resolve the same coordinate with a real Gradle consumer (Gradle TestKit) and assert resolution + that files equal what Maven received (SC-003)
-- [ ] T022 [US2] End-to-end round-trip test: real Gradle publish → real Maven resolve AND real Gradle resolve → byte-for-byte hash comparison of published vs resolved files (SC-004, FR-003) — the authoritative Principle II test
+- [x] T020 [P] [US2] Integration test in `backend/src/test/kotlin/org/khorum/oss/relikqary/integration/`: pre-seed (or publish via US1) a coordinate, then resolve with a real Maven client (maven-invoker) and assert download + checksum verification (SC-002)
+- [x] T021 [P] [US2] Integration test: resolve the same coordinate with a real Gradle consumer (Gradle TestKit) and assert resolution + that files equal what Maven received (SC-003)
+- [x] T022 [US2] End-to-end round-trip test: real Gradle publish → real Maven resolve AND real Gradle resolve → byte-for-byte hash comparison of published vs resolved files (SC-004, FR-003) — the authoritative Principle II test
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Implement `GET`/`HEAD` serving in the protocol controller (`backend/.../protocol/`): stream stored bytes with correct content length, 404 when absent — depends on T013, T011
-- [ ] T024 [US2] Serve `maven-metadata.xml` (and its sidecars) as stored on publish so clients discover versions (FR-005, research.md §3) — depends on T023
+- [x] T023 [US2] Implement `GET`/`HEAD` serving in the protocol controller (`backend/.../protocol/`): stream stored bytes with correct content length, 404 when absent — depends on T013, T011
+- [x] T024 [US2] Serve `maven-metadata.xml` (and its sidecars) as stored on publish so clients discover versions (FR-005, research.md §3) — depends on T023
 
 **Checkpoint**: Full publish→resolve round-trip is green for both Maven and Gradle clients.
 
@@ -120,11 +120,11 @@ files in B and A untouched (SC-005, FR-007).
 
 ### Tests for User Story 3 (write first; ensure they FAIL before implementation) ⚠️
 
-- [ ] T025 [P] [US3] Integration test in `backend/src/test/kotlin/org/khorum/oss/relikqary/integration/`: using `@DynamicPropertySource`, bind the store root to location A, publish, assert files in A; in a second context bound to location B, publish, assert files in B and A unchanged (SC-005). Inject config dynamically — do not rely on a manual restart.
+- [x] T025 [P] [US3] Integration test in `backend/src/test/kotlin/org/khorum/oss/relikqary/integration/`: using `@DynamicPropertySource`, bind the store root to location A, publish, assert files in A; in a second context bound to location B, publish, assert files in B and A unchanged (SC-005). Inject config dynamically — do not rely on a manual restart.
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Confirm the storage root is sourced exclusively from `@ConfigurationProperties` (no hardcoded paths anywhere in `protocol`/`ingestion`/`storage`); fix any leak — depends on T011, T012
+- [x] T026 [US3] Confirm the storage root is sourced exclusively from `@ConfigurationProperties` (no hardcoded paths anywhere in `protocol`/`ingestion`/`storage`); fix any leak — depends on T011, T012
 
 **Checkpoint**: Storage location is fully config-driven and swappable.
 
@@ -134,10 +134,10 @@ files in B and A untouched (SC-005, FR-007).
 
 **Purpose**: Gate-clean the build, document, and run the quickstart.
 
-- [ ] T027 Run `./gradlew build` and resolve any detekt/Kover violations until the full gate is green (Principle III); annotate justified exemptions with `@ExcludeFromCoverage`
-- [ ] T028 [P] Update `README.md` with a short Relikqary description and a pointer to `specs/001-publish-resolve-mvp/quickstart.md`
-- [ ] T029 Execute the `quickstart.md` manual round-trip end-to-end against a locally running instance and confirm all SC checks
-- [ ] T030 [P] Record deferred follow-ups as a short note (server-side `maven-metadata.xml` synthesis, configurable strict checksum-validation mode FR-009a, S3/Spaces backend, auth) in the feature dir for future specs
+- [x] T027 Run `./gradlew build` and resolve any detekt/Kover violations until the full gate is green (Principle III); annotate justified exemptions with `@ExcludeFromCoverage`
+- [x] T028 [P] Update `README.md` with a short Relikqary description and a pointer to `specs/001-publish-resolve-mvp/quickstart.md`
+- [x] T029 Execute the `quickstart.md` manual round-trip end-to-end against a locally running instance and confirm all SC checks
+- [x] T030 [P] Record deferred follow-ups as a short note (server-side `maven-metadata.xml` synthesis, configurable strict checksum-validation mode FR-009a, S3/Spaces backend, auth) in the feature dir for future specs
 
 ---
 
