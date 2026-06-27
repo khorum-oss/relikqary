@@ -5,3 +5,6 @@ style:
     # Slightly wider than the 120 default to accommodate descriptive test names
     # and assertion messages without awkward wrapping.
     maxLineLength: 140
+  ReturnCount:
+    # Multiple/early returns are an accepted style in this codebase.
+    active: false

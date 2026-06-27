@@ -11,10 +11,10 @@ enum class PublishDecision {
     /** Store the bytes. */
     ACCEPT,
 
-    /** Existing immutable release coordinate ⇒ HTTP 409. */
+    /** Existing immutable release coordinate -> HTTP 409. */
     REJECT_IMMUTABLE,
 
-    /** Coordinate kind not accepted by this repository type ⇒ HTTP 400. */
+    /** Coordinate kind not accepted by this repository type -> HTTP 400. */
     REJECT_TYPE,
 }
 
@@ -28,18 +28,23 @@ class RepublishPolicy(private val properties: PublishProperties) {
 
     fun evaluate(type: RepositoryType, path: RepositoryPath, alreadyExists: Boolean): PublishDecision {
         val kind = path.classify()
-        if (kind != PathKind.METADATA && isTypeMismatch(type, kind)) return PublishDecision.REJECT_TYPE
-        return mutabilityDecision(kind, alreadyExists)
-    }
 
-    private fun isTypeMismatch(type: RepositoryType, kind: PathKind): Boolean =
-        (type == RepositoryType.RELEASE && kind == PathKind.SNAPSHOT) ||
-            (type == RepositoryType.SNAPSHOT && kind == PathKind.RELEASE)
+        if (kind != PathKind.METADATA) {
+            val mismatch = (type == RepositoryType.RELEASE && kind == PathKind.SNAPSHOT) ||
+                (type == RepositoryType.SNAPSHOT && kind == PathKind.RELEASE)
+            if (mismatch) return PublishDecision.REJECT_TYPE
+        }
 
-    private fun mutabilityDecision(kind: PathKind, alreadyExists: Boolean): PublishDecision = when {
-        !alreadyExists -> PublishDecision.ACCEPT
-        kind == PathKind.METADATA || kind == PathKind.SNAPSHOT -> PublishDecision.ACCEPT
-        properties.releasePolicy == PublishProperties.ReleasePolicy.OVERWRITE -> PublishDecision.ACCEPT
-        else -> PublishDecision.REJECT_IMMUTABLE
+        if (!alreadyExists) return PublishDecision.ACCEPT
+
+        return when (kind) {
+            PathKind.METADATA, PathKind.SNAPSHOT -> PublishDecision.ACCEPT
+            PathKind.RELEASE ->
+                if (properties.releasePolicy == PublishProperties.ReleasePolicy.OVERWRITE) {
+                    PublishDecision.ACCEPT
+                } else {
+                    PublishDecision.REJECT_IMMUTABLE
+                }
+        }
     }
 }
