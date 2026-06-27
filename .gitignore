@@ -3,11 +3,15 @@
 **/build/**
 .gradle/**
 .kotlin/**
-relikqary-store/
+relikquary-store**/
 
 **/.gradle/**
 
 secret.properties
+
+# IntelliJ HTTP Client private environment (holds publish credentials)
+http-client.private.env.json
+**/http-client.private.env.json
 
 jreleaser_public.asc
 public.key

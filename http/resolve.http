@@ -1,0 +1,72 @@
+# Resolve endpoint — GET /{repo}/{maven-path}
+#
+# Reads an artifact back from a named repository. Reads are open (no auth) regardless of profile.
+# HEAD is supported automatically by the GET mapping.
+#
+# These requests assume the artifacts from publish.http have already been published. Run publish.http
+# first (or point baseUrl at a server that already has them).
+
+### Resolve the release JAR -> 200 with application/octet-stream
+GET {{baseUrl}}/releases/com/example/demo/1.0.0/demo-1.0.0.jar
+
+> {%
+    client.test("artifact resolves", function () {
+        client.assert(response.status === 200, "expected 200, got " + response.status);
+        client.assert(response.contentType.mimeType === "application/octet-stream",
+            "expected octet-stream, got " + response.contentType.mimeType);
+    });
+%}
+
+### HEAD the release JAR -> 200 (existence/size check, no body)
+HEAD {{baseUrl}}/releases/com/example/demo/1.0.0/demo-1.0.0.jar
+
+> {%
+    client.test("HEAD ok", function () {
+        client.assert(response.status === 200, "expected 200, got " + response.status);
+    });
+%}
+
+### Resolve the snapshot JAR -> 200
+GET {{baseUrl}}/snapshots/com/example/demo/1.0.0-SNAPSHOT/demo-1.0.0-SNAPSHOT.jar
+
+> {%
+    client.test("snapshot resolves", function () {
+        client.assert(response.status === 200, "expected 200, got " + response.status);
+    });
+%}
+
+### Resolve maven-metadata.xml -> 200
+GET {{baseUrl}}/releases/com/example/demo/maven-metadata.xml
+
+> {%
+    client.test("metadata resolves", function () {
+        client.assert(response.status === 200, "expected 200, got " + response.status);
+    });
+%}
+
+### Missing artifact -> 404 Not Found
+GET {{baseUrl}}/releases/com/example/demo/0.0.0/demo-0.0.0.jar
+
+> {%
+    client.test("missing artifact is 404", function () {
+        client.assert(response.status === 404, "expected 404, got " + response.status);
+    });
+%}
+
+### Unknown repository -> 404 Not Found
+GET {{baseUrl}}/does-not-exist/com/example/demo/1.0.0/demo-1.0.0.jar
+
+> {%
+    client.test("unknown repo is 404", function () {
+        client.assert(response.status === 404, "expected 404, got " + response.status);
+    });
+%}
+
+### Invalid path (traversal segment) -> 400 Bad Request
+GET {{baseUrl}}/releases/com/example/../../../etc/passwd
+
+> {%
+    client.test("path traversal rejected", function () {
+        client.assert(response.status === 400, "expected 400, got " + response.status);
+    });
+%}

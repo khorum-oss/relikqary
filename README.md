@@ -1,6 +1,6 @@
-# Relikqary
+# Relikquary
 
-Relikqary is a self-hosted **artifact repository server** written in Kotlin and Spring Boot. It
+Relikquary is a self-hosted **artifact repository server** written in Kotlin and Spring Boot. It
 ingests artifact publishes from Gradle (the standard `maven-publish` plugin) and serves them back
 over HTTP in a Maven-compatible repository layout, so any standard Maven or Gradle client pointed at
 the right endpoint can resolve and download them. Final storage is configurable, so artifacts can be
@@ -35,7 +35,7 @@ Requires JDK 21 (provisioned by the Gradle toolchain).
 ./gradlew :backend:bootRun --args='--spring.profiles.active=local'
 ```
 
-The `local` profile disables authentication and stores artifacts under `./relikqary-store-local`, so
+The `local` profile disables authentication and stores artifacts under `./relikquary-store-local`, so
 a local Gradle `maven-publish` needs no credentials.
 
 ### Run with authentication (publishing requires credentials)
@@ -45,10 +45,10 @@ with the `PUBLISH` role. Configure a publisher and run:
 
 ```bash
 ./gradlew :backend:bootRun --args='\
-  --relikqary.storage.filesystem.root=/tmp/relikqary-store \
-  --relikqary.security.users[0].username=ci \
-  --relikqary.security.users[0].password={bcrypt}$2a$10$your-bcrypt-hash \
-  --relikqary.security.users[0].roles[0]=PUBLISH'
+  --relikquary.storage.filesystem.root=/tmp/relikquary-store \
+  --relikquary.security.users[0].username=ci \
+  --relikquary.security.users[0].password={bcrypt}$2a$10$your-bcrypt-hash \
+  --relikquary.security.users[0].roles[0]=PUBLISH'
 ```
 
 Then publish from Gradle with credentials:
@@ -64,11 +64,11 @@ publishing {
 }
 ```
 
-Relikqary listens on `http://localhost:8080`. Resolving (Maven or Gradle) needs no credentials.
+Relikquary listens on `http://localhost:8080`. Resolving (Maven or Gradle) needs no credentials.
 
 ### Named repositories
 
-Relikqary serves **named, typed repositories** addressed by a path prefix — there is no implicit repo
+Relikquary serves **named, typed repositories** addressed by a path prefix — there is no implicit repo
 at the root. The defaults are `releases` (immutable) and `snapshots` (overwritable); point clients at
 `http://localhost:8080/releases` (or `/snapshots`). A repository's type governs what it accepts:
 
@@ -78,31 +78,31 @@ at the root. The defaults are `releases` (immutable) and `snapshots` (overwritab
 | `snapshot` | `-SNAPSHOT` only (release → 400) | overwritten |
 | `mixed` | both | release immutable, snapshot/metadata overwritten |
 
-Define repositories under `relikqary.repositories` (`{name, type}`); an unknown repo name returns 404.
+Define repositories under `relikquary.repositories` (`{name, type}`); an unknown repo name returns 404.
 
 ### Object storage (S3 / DigitalOcean Spaces)
 
-Set `relikqary.storage.backend=s3` and point it at any S3-compatible endpoint (AWS S3, DigitalOcean
+Set `relikquary.storage.backend=s3` and point it at any S3-compatible endpoint (AWS S3, DigitalOcean
 Spaces, MinIO). Credentials come from the environment — never commit them.
 
 ```bash
-RELIKQARY_S3_ENDPOINT=https://nyc3.digitaloceanspaces.com \
-RELIKQARY_S3_BUCKET=my-artifacts \
-RELIKQARY_S3_ACCESS_KEY=... RELIKQARY_S3_SECRET_KEY=... \
-./gradlew :backend:bootRun --args='--relikqary.storage.backend=s3'
+RELIKQUARY_S3_ENDPOINT=https://nyc3.digitaloceanspaces.com \
+RELIKQUARY_S3_BUCKET=my-artifacts \
+RELIKQUARY_S3_ACCESS_KEY=... RELIKQUARY_S3_SECRET_KEY=... \
+./gradlew :backend:bootRun --args='--relikquary.storage.backend=s3'
 ```
 
 ## Configuration
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `relikqary.storage.backend` | `filesystem` | `filesystem` or `s3` (S3-compatible object storage) |
-| `relikqary.storage.filesystem.root` | `./relikqary-store` | Directory where artifacts are persisted (filesystem backend) |
-| `relikqary.storage.s3.endpoint` | _(none)_ | S3 endpoint override (e.g. DigitalOcean Spaces / MinIO) |
-| `relikqary.storage.s3.region` | `us-east-1` | S3 region |
-| `relikqary.storage.s3.bucket` | _(none)_ | Target bucket (must already exist) |
-| `relikqary.storage.s3.access-key` / `secret-key` | _(none)_ | S3 credentials (supply via env) |
-| `relikqary.storage.s3.path-style-access` | `true` | Path-style addressing (needed by MinIO/Spaces) |
-| `relikqary.publish.release-policy` | `reject` | `reject` or `overwrite` for re-publishing an existing release |
-| `relikqary.security.enabled` | `true` | Set `false` to disable auth (open publishing) — used by the `local` profile |
-| `relikqary.security.users` | _(empty)_ | Publishers: `{username, password ({bcrypt}…/{noop}…), roles}` |
+| `relikquary.storage.backend` | `filesystem` | `filesystem` or `s3` (S3-compatible object storage) |
+| `relikquary.storage.filesystem.root` | `./relikquary-store` | Directory where artifacts are persisted (filesystem backend) |
+| `relikquary.storage.s3.endpoint` | _(none)_ | S3 endpoint override (e.g. DigitalOcean Spaces / MinIO) |
+| `relikquary.storage.s3.region` | `us-east-1` | S3 region |
+| `relikquary.storage.s3.bucket` | _(none)_ | Target bucket (must already exist) |
+| `relikquary.storage.s3.access-key` / `secret-key` | _(none)_ | S3 credentials (supply via env) |
+| `relikquary.storage.s3.path-style-access` | `true` | Path-style addressing (needed by MinIO/Spaces) |
+| `relikquary.publish.release-policy` | `reject` | `reject` or `overwrite` for re-publishing an existing release |
+| `relikquary.security.enabled` | `true` | Set `false` to disable auth (open publishing) — used by the `local` profile |
+| `relikquary.security.users` | _(empty)_ | Publishers: `{username, password ({bcrypt}…/{noop}…), roles}` |

@@ -1,0 +1,14 @@
+
+relikquary:
+  security:
+    enabled: true
+    users:
+      - username: test
+        password: "{noop}test_password"
+        roles: [ PUBLISH ]
+  storage:
+    filesystem:
+      root: ${RELIKQUARY_STORAGE_ROOT:./relikquary-store-local}
+
+server:
+  port: 8081

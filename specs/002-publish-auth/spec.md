@@ -64,18 +64,18 @@ Gradle clients with no credentials and confirm success.
 
 ### User Story 3 - Disable auth for local development (Priority: P2)
 
-A developer runs Relikqary locally with auth disabled via a single toggle (or the `local` profile)
+A developer runs Relikquary locally with auth disabled via a single toggle (or the `local` profile)
 and can publish without configuring or supplying any credentials.
 
 **Why this priority**: Removes day-to-day friction for local dev; not needed for the security
 guarantee itself, hence P2.
 
-**Independent Test**: Start with `relikqary.security.enabled=false`, `PUT` an artifact with no
+**Independent Test**: Start with `relikquary.security.enabled=false`, `PUT` an artifact with no
 credentials, and confirm it is stored (201).
 
 **Acceptance Scenarios**:
 
-1. **Given** `relikqary.security.enabled=false`, **When** a client `PUT`s with no credentials,
+1. **Given** `relikquary.security.enabled=false`, **When** a client `PUT`s with no credentials,
    **Then** it is stored (201).
 2. **Given** the `local` profile is active, **When** the server starts, **Then** auth is disabled and
    local publishing needs no login.
@@ -104,7 +104,7 @@ credentials, and confirm it is stored (201).
   (encoded) password + roles, with no code change to add/remove users.
 - **FR-006**: Passwords MUST be stored using a standard password encoder (bcrypt), supporting encoded
   values in config; plaintext-equivalent (`{noop}`) is permitted only for tests/local.
-- **FR-007**: A single configuration flag (`relikqary.security.enabled`, default true) MUST disable
+- **FR-007**: A single configuration flag (`relikquary.security.enabled`, default true) MUST disable
   all authentication when false, permitting publish without credentials (local-dev opt-out).
 - **FR-008**: Auth MUST be ON by default; disabling MUST be an explicit configuration choice.
 - **FR-009**: Enabling auth MUST NOT alter stored bytes or the repository wire layout (Principle I) —
@@ -124,7 +124,7 @@ credentials, and confirm it is stored (201).
   the same publish without credentials fails with 401.
 - **SC-002**: With auth enabled and an artifact published, real Maven and Gradle clients resolve it
   with no credentials.
-- **SC-003**: With `relikqary.security.enabled=false`, a publish with no credentials succeeds.
+- **SC-003**: With `relikquary.security.enabled=false`, a publish with no credentials succeeds.
 - **SC-004**: Default configuration (no overrides) has auth enabled — an unauthenticated publish is
   refused.
 - **SC-005**: Adding or removing a publisher requires only a configuration change, no rebuild.

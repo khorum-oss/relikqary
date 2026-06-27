@@ -14,7 +14,7 @@ description: "Task list for S3 / DigitalOcean Spaces storage backend"
 
 - [x] T002 [P] Extend `config/StorageProperties.kt`: `backend: Backend = FILESYSTEM` enum + `s3: S3` block (endpoint, region, bucket, accessKey, secretKey, pathStyleAccess=true)
 - [x] T003 Add `config/S3ClientConfig.kt`: `@Bean S3Client` from the s3 config (endpoint override, region, static credentials, `forcePathStyle`), `@ConditionalOnProperty(backend=s3)`
-- [x] T004 Annotate `storage/FilesystemArtifactStorage.kt` with `@ConditionalOnProperty("relikqary.storage.backend", havingValue="filesystem", matchIfMissing=true)`
+- [x] T004 Annotate `storage/FilesystemArtifactStorage.kt` with `@ConditionalOnProperty("relikquary.storage.backend", havingValue="filesystem", matchIfMissing=true)`
 
 ## Phase 3: US1 — Persist to S3 (P1)
 
@@ -31,7 +31,7 @@ description: "Task list for S3 / DigitalOcean Spaces storage backend"
 ## Phase 5: Polish
 
 - [x] T011 Regenerate `gradle/verification-metadata.xml` (SHA-256) for AWS SDK + test deps
-- [x] T012 [P] Document `relikqary.storage.backend`/`s3.*` in `application.yml` and `README.md`
+- [x] T012 [P] Document `relikquary.storage.backend`/`s3.*` in `application.yml` and `README.md`
 - [x] T013 `./gradlew build` green (compile + detekt + tests + Kover + strict verification); commit & push
 
 ## Dependencies

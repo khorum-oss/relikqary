@@ -8,9 +8,9 @@ description: "Task list for multiple named repositories"
 
 ## Phase 1: Foundational
 
-- [x] T001 [P] Add `config/RepositoryProperties.kt` (`@ConfigurationProperties("relikqary")`, `repositories: List<Repo>` of `{name, type}`) and `repository/RepositoryType.kt` enum (RELEASE, SNAPSHOT, MIXED)
+- [x] T001 [P] Add `config/RepositoryProperties.kt` (`@ConfigurationProperties("relikquary")`, `repositories: List<Repo>` of `{name, type}`) and `repository/RepositoryType.kt` enum (RELEASE, SNAPSHOT, MIXED)
 - [x] T002 Add `repository/RepositoryRegistry.kt` (lookup by name from properties; repo-name validation: single safe segment) — depends on T001
-- [x] T003 Register `RepositoryProperties` in `RelikqaryApplication.kt`; add default `releases`/`snapshots` repos to `application.yml`
+- [x] T003 Register `RepositoryProperties` in `RelikquaryApplication.kt`; add default `releases`/`snapshots` repos to `application.yml`
 
 ## Phase 2: US2 — Repo-aware policy
 

@@ -1,7 +1,7 @@
 # Contract: S3-Compatible Storage Backend
 
 Extends the 001 repository contract. The HTTP wire protocol, Maven layout, and auth (002) are
-**unchanged**; only the persistence target changes when `relikqary.storage.backend=s3`.
+**unchanged**; only the persistence target changes when `relikquary.storage.backend=s3`.
 
 ## Object mapping
 
@@ -24,15 +24,15 @@ Extends the 001 repository contract. The HTTP wire protocol, Maven layout, and a
 ## Configuration
 
 ```yaml
-relikqary:
+relikquary:
   storage:
     backend: s3
     s3:
       endpoint: https://nyc3.digitaloceanspaces.com   # or a MinIO/custom endpoint
       region: us-east-1
       bucket: my-artifacts
-      access-key: ${RELIKQARY_S3_ACCESS_KEY}
-      secret-key: ${RELIKQARY_S3_SECRET_KEY}
+      access-key: ${RELIKQUARY_S3_ACCESS_KEY}
+      secret-key: ${RELIKQUARY_S3_SECRET_KEY}
       path-style-access: true
 ```
 

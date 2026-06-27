@@ -1,4 +1,4 @@
-relikqary:
+relikquary:
   # Named, typed repositories, each addressed by a path prefix (/{repo}/...). There is no implicit
   # repository at the root. Types: release (immutable), snapshot (overwritable), mixed (both).
   repositories:
@@ -10,16 +10,16 @@ relikqary:
     # Storage backend: 'filesystem' (default) or 's3' (S3-compatible: AWS, DigitalOcean Spaces, MinIO).
     backend: filesystem
     # Final storage location for the filesystem backend. Override per environment
-    # (e.g. --relikqary.storage.filesystem.root=/var/lib/relikqary) with no code change.
+    # (e.g. --relikquary.storage.filesystem.root=/var/lib/relikquary) with no code change.
     filesystem:
-      root: ${RELIKQARY_STORAGE_ROOT:./relikqary-store}
+      root: ${RELIKQUARY_STORAGE_ROOT:./relikquary-store}
     # S3 backend settings (used when backend=s3). Credentials come from env — never commit them.
     s3:
-      endpoint: ${RELIKQARY_S3_ENDPOINT:}
-      region: ${RELIKQARY_S3_REGION:us-east-1}
-      bucket: ${RELIKQARY_S3_BUCKET:}
-      access-key: ${RELIKQARY_S3_ACCESS_KEY:}
-      secret-key: ${RELIKQARY_S3_SECRET_KEY:}
+      endpoint: ${RELIKQUARY_S3_ENDPOINT:}
+      region: ${RELIKQUARY_S3_REGION:us-east-1}
+      bucket: ${RELIKQUARY_S3_BUCKET:}
+      access-key: ${RELIKQUARY_S3_ACCESS_KEY:}
+      secret-key: ${RELIKQUARY_S3_SECRET_KEY:}
       path-style-access: true
   publish:
     # Re-publish policy for an existing RELEASE coordinate: reject (default, immutable)
@@ -39,7 +39,7 @@ relikqary:
 
 spring:
   application:
-    name: relikqary
+    name: relikquary
   servlet:
     multipart:
       # Artifacts are streamed as raw request bodies, not multipart form uploads.

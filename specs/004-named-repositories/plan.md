@@ -30,12 +30,12 @@ Kotlin 2.3.21 / JDK 21 / Spring Boot 4.1. No new deps. Single `backend` module.
   `"{repo}/{artifactKey}"`.
 - **Policy** → repo-aware decision: reuse `RepositoryPath.classify()` (RELEASE/SNAPSHOT/METADATA) and
   the repo type to return `ACCEPT` / `REJECT_IMMUTABLE` (409) / `REJECT_TYPE` (400). The global
-  `relikqary.publish.release-policy=overwrite` still relaxes release immutability for release/mixed.
+  `relikquary.publish.release-policy=overwrite` still relaxes release immutability for release/mixed.
 - **Repo name validation**: a single safe segment (alphanumeric, `-`, `_`); no traversal.
 
 ## Phase 1 — Design
 
-- `RepositoryProperties` (`@ConfigurationProperties("relikqary")`, `repositories: List<Repo>` of
+- `RepositoryProperties` (`@ConfigurationProperties("relikquary")`, `repositories: List<Repo>` of
   `{name, type}`); `RepositoryRegistry` (lookup) + `RepositoryType` enum (RELEASE, SNAPSHOT, MIXED).
 - Contract delta in `contracts/named-repositories.md`.
 
@@ -43,7 +43,7 @@ Kotlin 2.3.21 / JDK 21 / Spring Boot 4.1. No new deps. Single `backend` module.
 
 New: `config/RepositoryProperties.kt`, `repository/RepositoryRegistry.kt` (+ `RepositoryType`).
 Modified: `protocol/RepositoryController.kt` (repo parse, key namespacing, decision→status),
-`ingestion/RepublishPolicy.kt` (repo-aware `evaluate`), `RelikqaryApplication.kt`
+`ingestion/RepublishPolicy.kt` (repo-aware `evaluate`), `RelikquaryApplication.kt`
 (`@EnableConfigurationProperties`), `application.yml` (default `releases`/`snapshots`),
 `README.md`. Existing HTTP tests move under a repo prefix.
 

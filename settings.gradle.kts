@@ -5,6 +5,6 @@ pluginManagement {
     }
 }
 
-rootProject.name = "relikqary"
+rootProject.name = "relikquary"
 
-include("backend")
+include("backend", "sandbox")

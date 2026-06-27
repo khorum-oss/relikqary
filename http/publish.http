@@ -1,0 +1,148 @@
+# Publish endpoint — PUT /{repo}/{maven-path}
+#
+# Stores an artifact under a named repository. Requires the PUBLISH role via HTTP Basic when auth is
+# enabled (default profile). With the `local` profile (relikquary.security.enabled=false) the
+# Authorization header is ignored and every PUT is allowed.
+#
+# Run the backend first, e.g.:
+#   ./gradlew :backend:bootRun --args='--spring.profiles.active=local'   # no auth
+# or configure a publisher (relikquary.security.users) and use the `secured` environment.
+#
+# Coordinate kind is inferred from the path:
+#   - version dir ending in -SNAPSHOT      -> snapshot (overwritable)
+#   - file named maven-metadata.xml*       -> metadata (always overwritable)
+#   - anything else                        -> release (immutable; re-publish -> 409)
+# Repo type rules: `releases` rejects snapshot coords, `snapshots` rejects release coords (-> 400).
+
+### Publish a release JAR (first time -> 201 Created)
+PUT {{baseUrl}}/releases/com/example/demo/1.0.0/demo-1.0.0.jar
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/java-archive
+
+PK-fake-jar-bytes-for-demo-1.0.0
+
+> {%
+    client.test("release jar accepted", function () {
+        client.assert(response.status === 201 || response.status === 200, "expected 201/200, got " + response.status);
+    });
+%}
+
+### Publish the matching POM (-> 201 Created)
+PUT {{baseUrl}}/releases/com/example/demo/1.0.0/demo-1.0.0.pom
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/xml
+
+<project><modelVersion>4.0.0</modelVersion><groupId>com.example</groupId><artifactId>demo</artifactId><version>1.0.0</version></project>
+
+> {%
+    client.test("release pom accepted", function () {
+        client.assert(response.status === 201 || response.status === 200, "expected 201/200, got " + response.status);
+    });
+%}
+
+### Re-publish the SAME release JAR -> 409 Conflict (releases are immutable)
+# Run the first request above before this one.
+PUT {{baseUrl}}/releases/com/example/demo/1.0.0/demo-1.0.0.jar
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/java-archive
+
+PK-fake-jar-bytes-attempt-2
+
+> {%
+    client.test("immutable release rejected", function () {
+        client.assert(response.status === 409, "expected 409, got " + response.status);
+    });
+%}
+
+### Publish a SNAPSHOT JAR (-> 201), then re-publish to confirm it overwrites (-> 200)
+PUT {{baseUrl}}/snapshots/com/example/demo/1.0.0-SNAPSHOT/demo-1.0.0-SNAPSHOT.jar
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/java-archive
+
+PK-fake-snapshot-bytes
+
+> {%
+    client.test("snapshot accepted (created or overwritten)", function () {
+        client.assert(response.status === 201 || response.status === 200, "expected 201/200, got " + response.status);
+    });
+%}
+
+### Publish maven-metadata.xml (always overwritable -> 200/201)
+PUT {{baseUrl}}/releases/com/example/demo/maven-metadata.xml
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/xml
+
+<metadata><groupId>com.example</groupId><artifactId>demo</artifactId></metadata>
+
+> {%
+    client.test("metadata accepted", function () {
+        client.assert(response.status === 201 || response.status === 200, "expected 201/200, got " + response.status);
+    });
+%}
+
+### Type mismatch: SNAPSHOT coordinate into the `releases` repo -> 400 Bad Request
+PUT {{baseUrl}}/releases/com/example/demo/2.0.0-SNAPSHOT/demo-2.0.0-SNAPSHOT.jar
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/java-archive
+
+nope
+
+> {%
+    client.test("snapshot coord rejected by release repo", function () {
+        client.assert(response.status === 400, "expected 400, got " + response.status);
+    });
+%}
+
+### Type mismatch: RELEASE coordinate into the `snapshots` repo -> 400 Bad Request
+PUT {{baseUrl}}/snapshots/com/example/demo/2.0.0/demo-2.0.0.jar
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/java-archive
+
+nope
+
+> {%
+    client.test("release coord rejected by snapshot repo", function () {
+        client.assert(response.status === 400, "expected 400, got " + response.status);
+    });
+%}
+
+### Unknown repository -> 404 Not Found
+PUT {{baseUrl}}/does-not-exist/com/example/demo/1.0.0/demo-1.0.0.jar
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/java-archive
+
+nope
+
+> {%
+    client.test("unknown repo is 404", function () {
+        client.assert(response.status === 404, "expected 404, got " + response.status);
+    });
+%}
+
+### Invalid path (traversal segment) -> 400 Bad Request
+PUT {{baseUrl}}/releases/com/example/../../../etc/passwd
+Authorization: Basic {{publishUser}} {{publishPassword}}
+Content-Type: application/octet-stream
+
+nope
+
+> {%
+    client.test("path traversal rejected", function () {
+        client.assert(response.status === 400, "expected 400, got " + response.status);
+    });
+%}
+
+### Missing credentials against a SECURED server -> 401 Unauthorized
+# Only meaningful when auth is enabled (default profile with a configured user). Skips/415 differ under
+# the `local` profile, where auth is disabled.
+PUT {{baseUrl}}/releases/com/example/demo/9.9.9/demo-9.9.9.jar
+Content-Type: application/java-archive
+
+nope
+
+> {%
+    client.test("anonymous publish blocked when secured", function () {
+        client.assert(response.status === 401 || response.status === 201 || response.status === 200,
+            "expected 401 (secured) or 201/200 (local profile), got " + response.status);
+    });
+%}

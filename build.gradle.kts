@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.sonarqube)
 }
 
-group = "org.khorum.oss.relikqary"
+group = "org.khorum.oss.relikquary"
 
 dependencies {
     kover(project(":backend"))
@@ -16,7 +16,7 @@ dependencies {
 
 sonar {
     properties {
-        property("sonar.projectKey", "khorum-relikqary")
+        property("sonar.projectKey", "khorum-relikquary")
         property("sonar.organization", "khorum-oss")
         property("sonar.host.url", "https://sonarcloud.io")
         property(

@@ -1,6 +1,6 @@
 # Contract: Maven-Compatible Repository HTTP Protocol
 
-The public contract Relikqary exposes in this MVP. It MUST be what unmodified Maven and Gradle clients
+The public contract Relikquary exposes in this MVP. It MUST be what unmodified Maven and Gradle clients
 already speak — no custom client. All paths are under a single implicit repository root.
 
 ## Path scheme

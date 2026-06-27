@@ -6,7 +6,7 @@
 
 ## Summary
 
-Deliver the smallest end-to-end slice of Relikqary: a Spring Boot (Kotlin) service that accepts a
+Deliver the smallest end-to-end slice of Relikquary: a Spring Boot (Kotlin) service that accepts a
 Gradle `maven-publish` upload over HTTP, stores every file byte-for-byte in a configurable filesystem
 location behind a storage abstraction, and serves the files back at standard Maven-repository-layout
 paths so that unmodified Maven AND Gradle clients resolve the artifact. Re-publish is governed by a
@@ -103,14 +103,14 @@ responsibility split.
 backend/
 ├── build.gradle.kts
 └── src/
-    ├── main/kotlin/org/khorum/oss/relikqary/
-    │   ├── RelikqaryApplication.kt          # Spring Boot entrypoint
+    ├── main/kotlin/org/khorum/oss/relikquary/
+    │   ├── RelikquaryApplication.kt          # Spring Boot entrypoint
     │   ├── protocol/                         # HTTP layer: Maven repo GET/PUT/HEAD controller
     │   ├── ingestion/                        # publish acceptance + republish-policy enforcement
     │   ├── storage/                          # ArtifactStorage abstraction + FilesystemArtifactStorage
     │   ├── coordinate/                       # coordinate/path parsing & Maven layout model
     │   └── config/                           # @ConfigurationProperties (storage location, policy)
-    └── test/kotlin/org/khorum/oss/relikqary/
+    └── test/kotlin/org/khorum/oss/relikquary/
         ├── unit/                             # coordinate parsing, policy, storage (MockK/@TempDir)
         └── integration/                      # @SpringBootTest round-trip (Gradle publish + M/G resolve)
 ```

@@ -12,10 +12,10 @@ Auth is disabled; publish from a local Gradle build with no credentials (validat
 
 ```bash
 ./gradlew :backend:bootRun --args='\
-  --relikqary.storage.filesystem.root=/tmp/relikqary-store \
-  --relikqary.security.users[0].username=ci \
-  --relikqary.security.users[0].password={bcrypt}<hash> \
-  --relikqary.security.users[0].roles[0]=PUBLISH'
+  --relikquary.storage.filesystem.root=/tmp/relikquary-store \
+  --relikquary.security.users[0].username=ci \
+  --relikquary.security.users[0].password={bcrypt}<hash> \
+  --relikquary.security.users[0].roles[0]=PUBLISH'
 ```
 
 - Publish **with** credentials (`credentials { username; password }` in the Gradle repo block) → succeeds (SC-001).

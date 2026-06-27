@@ -1,9 +1,9 @@
 # 'local' profile: frictionless local development.
 # Activate with: ./gradlew :backend:bootRun --args='--spring.profiles.active=local'
 # Auth is disabled so publishing needs no login, and artifacts land in a local directory.
-relikqary:
+relikquary:
   security:
     enabled: false
   storage:
     filesystem:
-      root: ${RELIKQARY_STORAGE_ROOT:./relikqary-store-local}
+      root: ${RELIKQUARY_STORAGE_ROOT:./relikquary-store-local}

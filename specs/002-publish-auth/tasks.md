@@ -14,9 +14,9 @@ description: "Task list for Publish Authentication & Authorization"
 
 ## Phase 2: Foundational
 
-- [x] T002 [P] Add `config/SecurityProperties.kt` (`@ConfigurationProperties("relikqary.security")`: `enabled: Boolean = true`, `users: List<User>` of username/password/roles)
+- [x] T002 [P] Add `config/SecurityProperties.kt` (`@ConfigurationProperties("relikquary.security")`: `enabled: Boolean = true`, `users: List<User>` of username/password/roles)
 - [x] T003 Add `config/SecurityConfig.kt`: `PasswordEncoder` (delegating), `UserDetailsService` (in-memory from props), and a `SecurityFilterChain` branching on `enabled` (enabled ⇒ httpBasic + `PUT` requires `hasRole("PUBLISH")`, else permitAll, csrf off, stateless; disabled ⇒ permitAll) — depends on T001, T002
-- [x] T004 Register `SecurityProperties` in `RelikqaryApplication.kt` `@EnableConfigurationProperties`; document keys in `application.yml`; add `application-local.yml` (`local` profile: `relikqary.security.enabled: false` + local storage root) — depends on T002
+- [x] T004 Register `SecurityProperties` in `RelikquaryApplication.kt` `@EnableConfigurationProperties`; document keys in `application.yml`; add `application-local.yml` (`local` profile: `relikquary.security.enabled: false` + local storage root) — depends on T002
 
 ## Phase 3: US1 — Only authenticated publishers can publish (P1)
 
@@ -30,7 +30,7 @@ description: "Task list for Publish Authentication & Authorization"
 
 ## Phase 5: US3 — Disable auth for local dev (P2)
 
-- [x] T009 [P] [US3] Integration test `integration/AuthDisabledTest.kt` (`relikqary.security.enabled=false`): `PUT` no-cred → 201
+- [x] T009 [P] [US3] Integration test `integration/AuthDisabledTest.kt` (`relikquary.security.enabled=false`): `PUT` no-cred → 201
 
 ## Phase 6: Polish
 

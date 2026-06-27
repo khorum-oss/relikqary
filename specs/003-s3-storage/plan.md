@@ -4,7 +4,7 @@
 
 ## Summary
 
-Add an S3-compatible `ArtifactStorage` implementation selectable via `relikqary.storage.backend`
+Add an S3-compatible `ArtifactStorage` implementation selectable via `relikquary.storage.backend`
 (`filesystem` default, `s3` opt-in), using AWS SDK for Java v2. Protocol, auth (002), and wire layout
 are unchanged — only where bytes live. Verified here against adobe/s3mock as an external process; a
 Docker-guarded Testcontainers MinIO test is included for CI.
@@ -32,7 +32,7 @@ Test: `com.adobe.testing:s3mock` (5.1.0, `exec` classifier — runnable jar, ext
   has none → buffer the stream to a temp file (reuse `FilesystemArtifactStorage`'s temp-file pattern),
   `putObject(RequestBody.fromFile)`, return size.
 - **exists/read**: `headObject` (NoSuchKey ⇒ false); `getObject` ⇒ `StoredArtifact(stream, contentLength)`.
-- **Bean selection**: `@ConditionalOnProperty("relikqary.storage.backend", havingValue=…)` on each
+- **Bean selection**: `@ConditionalOnProperty("relikquary.storage.backend", havingValue=…)` on each
   impl (filesystem `matchIfMissing=true`); `S3Client` `@Bean` only when `backend=s3`.
 
 ## Phase 1 — Design
@@ -53,5 +53,5 @@ New: `storage/S3ArtifactStorage.kt`, `config/S3ClientConfig.kt`. Modified: `conf
 
 `./gradlew build` green: filesystem tests unchanged + `S3ArtifactStorageTest` (mocked client, logic) +
 `S3RoundTripTest` (s3mock external process, real boundary) + Docker-guarded MinIO test (skipped here);
-detekt + Kover + strict dependency verification. Manual: run `--relikqary.storage.backend=s3` against
+detekt + Kover + strict dependency verification. Manual: run `--relikquary.storage.backend=s3` against
 a Spaces/MinIO endpoint and publish/resolve.

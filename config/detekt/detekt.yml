@@ -1,4 +1,4 @@
-# Relikqary detekt configuration. Layered on top of detekt's default rules
+# Relikquary detekt configuration. Layered on top of detekt's default rules
 # (buildUponDefaultConfig = true); only deliberate deviations are listed here.
 style:
   MaxLineLength:

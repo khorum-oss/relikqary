@@ -46,7 +46,7 @@ Where files are persisted; swappable without code changes (FR-007).
 
 | Field | Description | Rules |
 |-------|-------------|-------|
-| `filesystem.root` | Base directory for the filesystem backend | Configured via `relikqary.storage.*`; must be writable |
+| `filesystem.root` | Base directory for the filesystem backend | Configured via `relikquary.storage.*`; must be writable |
 
 ## RepublishPolicy (configuration + behavior)
 

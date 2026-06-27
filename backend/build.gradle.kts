@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.kover)
 }
 
-group = "org.khorum.oss.relikqary"
+group = "org.khorum.oss.relikquary"
 
 // adobe/s3mock runnable jar (exec classifier) — driven as an external process in S3RoundTripTest so it
 // runs in its own JVM (no Spring Boot classpath clash) and needs no Docker.
@@ -56,9 +56,9 @@ tasks.withType<Test> {
     useJUnitPlatform()
     // Real-client round-trip tests drive the repo's Gradle wrapper and the system Maven via
     // external processes (keeping gradle-api/maven libs off the test classpath).
-    systemProperty("relikqary.rootProjectDir", rootProject.layout.projectDirectory.asFile.absolutePath)
-    systemProperty("relikqary.mavenExecutable", System.getenv("MAVEN_EXECUTABLE") ?: "/opt/maven/bin/mvn")
+    systemProperty("relikquary.rootProjectDir", rootProject.layout.projectDirectory.asFile.absolutePath)
+    systemProperty("relikquary.mavenExecutable", System.getenv("MAVEN_EXECUTABLE") ?: "/opt/maven/bin/mvn")
     // The s3mock runnable jar, resolved lazily and passed to S3RoundTripTest.
     val s3mockJar = s3mock
-    doFirst { systemProperty("relikqary.s3mockJar", s3mockJar.singleFile.absolutePath) }
+    doFirst { systemProperty("relikquary.s3mockJar", s3mockJar.singleFile.absolutePath) }
 }

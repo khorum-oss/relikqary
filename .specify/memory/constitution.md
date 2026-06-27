@@ -1,8 +1,8 @@
 <!--
 SYNC IMPACT REPORT
 Version change: (none) → 1.0.0
-Bump rationale: Initial ratification of the Relikqary constitution. Adapted from the external
-"Kontinuance" CI/CD constitution v1.1.0 baseline and retargeted for Relikqary's actual scope (a
+Bump rationale: Initial ratification of the Relikquary constitution. Adapted from the external
+"Kontinuance" CI/CD constitution v1.1.0 baseline and retargeted for Relikquary's actual scope (a
 Maven/Gradle artifact repository server). This starts a new version line at 1.0.0; it is NOT a
 continuation of Kontinuance's versioning.
 Principle changes vs. baseline:
@@ -11,10 +11,10 @@ Principle changes vs. baseline:
   II.  Test-First & Integration-Verified Discipline → retained and strengthened (real publish/
        resolve round-trips via Maven AND Gradle clients; real storage backends)
   III. Quality Gates Are Non-Negotiable → retained (detekt / Kover / SonarCloud)
-  IV.  Correct, Covered Code Generation → REMOVED (Relikqary is not a code-generation tool; the
+  IV.  Correct, Covered Code Generation → REMOVED (Relikquary is not a code-generation tool; the
        inherited KSP/KotlinPoet scaffolding from the prior "Konstellation" project is out of scope)
   V.   Supply-Chain Integrity & Reproducible Publishing → renumbered to IV and broadened to
-       "Supply-Chain Integrity & Faithful Storage" (Relikqary stores/serves OTHER projects'
+       "Supply-Chain Integrity & Faithful Storage" (Relikquary stores/serves OTHER projects'
        artifacts byte-for-byte, preserving their checksums and signatures)
 Added sections: none beyond the retargeted core (4 principles)
 Removed sections: none structurally; the code-generation principle was dropped
@@ -31,9 +31,9 @@ Deferred / follow-up TODOs:
     confirmed during /speckit-plan.
 -->
 
-# Relikqary Constitution
+# Relikquary Constitution
 
-Relikqary is an artifact repository server written in Kotlin and Spring Boot. It ingests artifact
+Relikquary is an artifact repository server written in Kotlin and Spring Boot. It ingests artifact
 publishes from Gradle — both standard `maven-publish` output (Maven layout: `groupId/artifactId/
 version` with POM, jar, sources, javadoc, checksums, and optional signatures) and Gradle-native
 output (Gradle Module Metadata `.module` files) — and serves them back over HTTP in a
@@ -47,7 +47,7 @@ for module layout and storage backends are made.
 
 ### I. Repository Contract & Client Compatibility
 
-Relikqary's public contract is the repository it exposes, not its internal code. A published
+Relikquary's public contract is the repository it exposes, not its internal code. A published
 artifact MUST remain resolvable by standard Maven and Gradle clients: the served repository layout
 (path scheme, metadata files, `maven-metadata.xml`, checksum and Gradle Module Metadata
 conventions) and the HTTP resolution/publish protocol MUST stay compatible with those clients. The
@@ -55,14 +55,14 @@ HTTP API and the configuration surface (storage targets, repository definitions)
 public contracts. Any change that breaks layout, resolution, publish acceptance, or removes/renames
 a configuration contract REQUIRES a MAJOR version bump. The `VERSION` file is the single source of
 truth for the released version and MUST follow Semantic Versioning. Rationale: builds across many
-projects pin Relikqary as a repository URL; silent incompatibility strands every consumer that
+projects pin Relikquary as a repository URL; silent incompatibility strands every consumer that
 resolves through it.
 
 ### II. Test-First & Integration-Verified Discipline
 
 Behavior changes MUST be accompanied by tests, written before the implementation where practical
 (Red → Green → Refactor); new or changed public behavior MUST have a failing test demonstrated
-before the fix lands. Because Relikqary's entire value is interoperability, correctness MUST be
+before the fix lands. Because Relikquary's entire value is interoperability, correctness MUST be
 proven by REAL round-trips, not mocks: a test MUST actually publish an artifact from a Gradle build
 and then resolve that same artifact back through both a real Maven client and a real Gradle client.
 Storage backends MUST each be exercised against their real boundary — Testcontainers for networked
@@ -85,12 +85,12 @@ if they cannot be bypassed under deadline pressure.
 
 ### IV. Supply-Chain Integrity & Faithful Storage
 
-Relikqary is itself a supply-chain component: it stores and serves OTHER projects' artifacts, so it
+Relikquary is itself a supply-chain component: it stores and serves OTHER projects' artifacts, so it
 MUST preserve stored bytes exactly and serve consumer-supplied checksums and signatures faithfully
 — it MUST NEVER silently alter, re-checksum, or strip the signatures of stored artifacts. For
-Relikqary's own build and releases: dependency verification (checksums and signatures in
+Relikquary's own build and releases: dependency verification (checksums and signatures in
 `gradle/verification-metadata.xml`) MUST remain enabled, and new dependencies are added by
-extending the verification metadata, never by disabling verification. Relikqary's own published
+extending the verification metadata, never by disabling verification. Relikquary's own published
 artifacts MUST be GPG-signed. Secrets (signing keys, storage-backend credentials) MUST be supplied
 via environment variables or untracked local files and MUST NEVER be committed. Rationale: a
 repository that corrupts or strips integrity metadata silently breaks the trust of every downstream
@@ -100,7 +100,7 @@ consumer that verifies what it pulls.
 
 - **Language/Toolchain**: Kotlin on the JDK 21 toolchain across all modules. Build logic is
   authored in Gradle Kotlin DSL (`*.gradle.kts`).
-- **Runtime**: Relikqary runs on Spring Boot (Kotlin). The HTTP layer serves the Maven-compatible
+- **Runtime**: Relikquary runs on Spring Boot (Kotlin). The HTTP layer serves the Maven-compatible
   repository and accepts publishes; asynchronous coordination uses Kotlin coroutines; storage
   backends and their selection are wired through Spring configuration behind a pluggable storage
   abstraction, so the final storage location is configurable without code changes.

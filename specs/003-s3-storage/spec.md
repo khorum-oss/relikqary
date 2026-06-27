@@ -12,7 +12,7 @@
 
 ### User Story 1 - Persist artifacts to S3-compatible object storage (Priority: P1)
 
-An operator configures Relikqary to use an S3-compatible backend (AWS S3, DigitalOcean Spaces, or a
+An operator configures Relikquary to use an S3-compatible backend (AWS S3, DigitalOcean Spaces, or a
 compatible endpoint) and a bucket. Published artifacts are stored in that bucket and resolve back
 byte-for-byte, exactly as with the filesystem backend.
 
@@ -25,7 +25,7 @@ Maven-layout key.
 
 **Acceptance Scenarios**:
 
-1. **Given** `relikqary.storage.backend=s3` with valid endpoint/bucket/credentials, **When** a client
+1. **Given** `relikquary.storage.backend=s3` with valid endpoint/bucket/credentials, **When** a client
    publishes an artifact, **Then** the file is stored as an object whose key is the Maven-layout path.
 2. **Given** an artifact stored in the bucket, **When** a client resolves it, **Then** the served bytes
    are byte-for-byte identical to what was published.
@@ -44,9 +44,9 @@ defaulting to filesystem keeps existing deployments unchanged.
 
 **Acceptance Scenarios**:
 
-1. **Given** no `relikqary.storage.backend` set, **When** the app starts, **Then** the filesystem
+1. **Given** no `relikquary.storage.backend` set, **When** the app starts, **Then** the filesystem
    backend is active (default, unchanged behaviour).
-2. **Given** `relikqary.storage.backend=s3`, **When** the app starts, **Then** the S3 backend is active
+2. **Given** `relikquary.storage.backend=s3`, **When** the app starts, **Then** the S3 backend is active
    and the filesystem backend is not.
 
 ### Edge Cases
@@ -61,10 +61,10 @@ defaulting to filesystem keeps existing deployments unchanged.
 
 ### Functional Requirements
 
-- **FR-001**: Relikqary MUST support an S3-compatible storage backend implementing the same
+- **FR-001**: Relikquary MUST support an S3-compatible storage backend implementing the same
   `ArtifactStorage` contract (exists/read/write) as the filesystem backend.
 - **FR-002**: The active backend MUST be selectable via configuration
-  (`relikqary.storage.backend = filesystem | s3`), defaulting to `filesystem`, with no code change.
+  (`relikquary.storage.backend = filesystem | s3`), defaulting to `filesystem`, with no code change.
 - **FR-003**: The S3 backend MUST support a configurable endpoint (for DigitalOcean Spaces / MinIO /
   custom S3), region, bucket, credentials, and path-style access.
 - **FR-004**: Stored objects MUST be byte-for-byte identical to what was published, and served back
@@ -80,7 +80,7 @@ defaulting to filesystem keeps existing deployments unchanged.
 
 ### Key Entities
 
-- **Storage Backend Selector**: `relikqary.storage.backend` choosing filesystem vs s3.
+- **Storage Backend Selector**: `relikquary.storage.backend` choosing filesystem vs s3.
 - **S3 Settings**: endpoint, region, bucket, credentials, path-style flag.
 
 ## Success Criteria *(mandatory)*

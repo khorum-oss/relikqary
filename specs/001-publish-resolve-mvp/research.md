@@ -27,7 +27,7 @@ key from the request path 1:1.
 **Rationale**: Both Gradle's `maven-publish` and Maven deploy use plain HTTP `PUT` to upload each file
 (artifact, POM, checksums `.sha1/.md5/.sha256/.sha512`, signatures `.asc`, and `maven-metadata.xml`)
 and `GET` to resolve, addressed purely by Maven-layout path. A path-passthrough design is therefore
-fully client-compatible and keeps Relikqary a faithful byte store (FR-003, FR-004, FR-011).
+fully client-compatible and keeps Relikquary a faithful byte store (FR-003, FR-004, FR-011).
 
 **Alternatives**: A typed REST API with explicit coordinate fields — would not be what stock clients
 speak; rejected. Server-side per-request transformation of bytes — violates faithful storage.
@@ -56,7 +56,7 @@ or SNAPSHOT timestamping arrive; recorded as a **follow-up hardening task**, out
 Classify the coordinate as SNAPSHOT (version ends with `-SNAPSHOT`) vs RELEASE. Default policy:
 RELEASE that already exists → reject the `PUT` with HTTP 409 Conflict, leaving stored bytes
 unchanged; SNAPSHOT → allow overwrite. The mode is operator-configurable via
-`@ConfigurationProperties` (e.g. `relikqary.publish.release-policy = reject | overwrite`) with no
+`@ConfigurationProperties` (e.g. `relikquary.publish.release-policy = reject | overwrite`) with no
 code change.
 
 **Rationale**: Matches standard Maven semantics the user requested and upholds Principle I
@@ -81,8 +81,8 @@ the round-trip. The design leaves room for a future configurable strict-validati
 
 **Decision**: An `ArtifactStorage` interface (`exists(key)`, `get(key): stream`, `put(key, stream)`,
 keys = repository-layout relative paths) with a `FilesystemArtifactStorage` implementation rooted at a
-configurable base directory. Bind the root via `@ConfigurationProperties("relikqary.storage")` (e.g.
-`relikqary.storage.filesystem.root`). Writes are atomic (write to a temp file, then move) and stream
+configurable base directory. Bind the root via `@ConfigurationProperties("relikquary.storage")` (e.g.
+`relikquary.storage.filesystem.root`). Writes are atomic (write to a temp file, then move) and stream
 to avoid buffering whole files.
 
 **Rationale**: Satisfies "point at different filesystem locations without code changes" and keeps the
@@ -94,7 +94,7 @@ future S3 backend; rejected.
 
 ## 7. Real-client round-trip verification harness (Principle II — the key decision)
 
-**Decision**: `@SpringBootTest(webEnvironment = RANDOM_PORT)` boots Relikqary with its storage root
+**Decision**: `@SpringBootTest(webEnvironment = RANDOM_PORT)` boots Relikquary with its storage root
 injected via `@DynamicPropertySource` pointing at a JUnit `@TempDir` (matching the constitution's
 explicit `@SpringBootTest` + `DynamicPropertySource` wiring mandate — no hard-coded paths or ports).
 The test then:

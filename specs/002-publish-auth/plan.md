@@ -6,7 +6,7 @@
 
 Add Spring Security HTTP Basic auth in front of the existing `RepositoryController`: `PUT` requires a
 configured publisher; `GET`/`HEAD` stay open. Users come from static configuration with bcrypt
-passwords. A single `relikqary.security.enabled` flag (default true) disables auth for local dev,
+passwords. A single `relikquary.security.enabled` flag (default true) disables auth for local dev,
 wired through a `local` Spring profile. Stored bytes and the Maven wire layout are unchanged.
 
 ## Technical Context
@@ -30,7 +30,7 @@ No violations; Complexity Tracking empty.
 
 ## Project Structure
 
-New under `backend/src/main/kotlin/org/khorum/oss/relikqary/config/`:
+New under `backend/src/main/kotlin/org/khorum/oss/relikquary/config/`:
 `SecurityProperties.kt` (`enabled` + users), `SecurityConfig.kt` (`SecurityFilterChain`,
 `PasswordEncoder`, `UserDetailsService`). New resource `application-local.yml`. Tests under
 `backend/src/test/.../integration/` and `.../unit/`.
@@ -51,7 +51,7 @@ existing `StorageProperties`/`PublishProperties` configuration-properties patter
 ## Phase 1 — Design
 
 - **Entities**: Publisher User (username, encoded password, roles), Security Settings (enabled, users)
-  — both bound from `relikqary.security.*`.
+  — both bound from `relikquary.security.*`.
 - **Contract delta** (to `contracts/`): `PUT` gains `401`/`403` responses when auth enabled; `GET`/
   `HEAD` unchanged. Documented in `contracts/auth.md`.
 

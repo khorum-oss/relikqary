@@ -19,5 +19,5 @@ MVP; each is a candidate for its own `/speckit-specify`.
   separation.
 - **Dependency signature verification** — the build currently enforces SHA-256 checksum verification;
   layering GPG signature verification (with a curated keyring) is a hardening step.
-- **Relikqary's own signed releases** — wire GPG-signed publishing of Relikqary itself (Principle IV),
-  out of scope while no Relikqary artifact is published.
+- **Relikquary's own signed releases** — wire GPG-signed publishing of Relikquary itself (Principle IV),
+  out of scope while no Relikquary artifact is published.

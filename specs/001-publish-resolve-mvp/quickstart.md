@@ -1,6 +1,6 @@
 # Quickstart & Validation: Core Publish-and-Resolve MVP
 
-How to run Relikqary and prove the publish→resolve round-trip end-to-end. This is a validation guide;
+How to run Relikquary and prove the publish→resolve round-trip end-to-end. This is a validation guide;
 implementation details live in `tasks.md` (after `/speckit-tasks`) and the code.
 
 ## Prerequisites
@@ -8,16 +8,16 @@ implementation details live in `tasks.md` (after `/speckit-tasks`) and the code.
 - JDK 21 (toolchain is provisioned by Gradle).
 - This repository; the `backend` Spring Boot module.
 
-## Run Relikqary locally
+## Run Relikquary locally
 
 ```bash
 # Start the service with a chosen filesystem storage location
 ./gradlew :backend:bootRun \
-  --args='--relikqary.storage.filesystem.root=/tmp/relikqary-store'
+  --args='--relikquary.storage.filesystem.root=/tmp/relikquary-store'
 # Service listens on http://localhost:8080 (default)
 ```
 
-To point at a different storage location, change `--relikqary.storage.filesystem.root` (or the
+To point at a different storage location, change `--relikquary.storage.filesystem.root` (or the
 corresponding `application.yml` / env var) — no code change (validates FR-007 / SC-005).
 
 ## Manual round-trip (smoke test)
@@ -36,14 +36,14 @@ publishing {
 
 ```bash
 ./gradlew publish        # expect BUILD SUCCESSFUL → SC-001
-ls /tmp/relikqary-store/com/example/widget/1.0.0/   # files present, byte-identical
+ls /tmp/relikquary-store/com/example/widget/1.0.0/   # files present, byte-identical
 ```
 
 **2. Resolve with Maven.** In a consumer `pom.xml`, add the repository and the dependency:
 
 ```xml
 <repositories>
-  <repository><id>relikqary</id><url>http://localhost:8080</url></repository>
+  <repository><id>relikquary</id><url>http://localhost:8080</url></repository>
 </repositories>
 <dependency><groupId>com.example</groupId><artifactId>widget</artifactId><version>1.0.0</version></dependency>
 ```
@@ -75,14 +75,14 @@ The MVP's correctness is proven by the round-trip integration test (see `plan.md
 ./gradlew build                    # full gate: compile + detekt + Kover verify + tests
 ```
 
-The round-trip test boots Relikqary on a random port against a `@TempDir` store, then drives a **real**
+The round-trip test boots Relikquary on a random port against a `@TempDir` store, then drives a **real**
 Gradle publish (Gradle TestKit) and **real** Maven + Gradle resolves, asserting success and
 byte-for-byte equality. `./gradlew build` must be green (detekt zero violations, Kover verification
 passes) before merge.
 
 ## Edge-case checks to demonstrate
 
-- GET an unpublished coordinate → `404`, and a client with Relikqary + another repo falls through
+- GET an unpublished coordinate → `404`, and a client with Relikquary + another repo falls through
   (SC-006).
 - Re-`publish` an existing RELEASE → `409`, stored files unchanged (SC-007); re-publish a `-SNAPSHOT`
   → overwrite succeeds.

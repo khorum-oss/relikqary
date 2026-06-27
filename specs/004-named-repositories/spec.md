@@ -66,7 +66,7 @@ Each repo's type restricts what it accepts and whether existing artifacts may be
 
 ### Functional Requirements
 
-- **FR-001**: Relikqary MUST serve multiple named repositories, each addressed by a path prefix
+- **FR-001**: Relikquary MUST serve multiple named repositories, each addressed by a path prefix
   `/{repo}/…`; there is no implicit repository at the root.
 - **FR-002**: Repositories MUST be defined in configuration as `{name, type}` with no code change;
   defaults MUST include a `releases` (release) and a `snapshots` (snapshot) repo.
