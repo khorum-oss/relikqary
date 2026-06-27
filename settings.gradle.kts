@@ -7,4 +7,4 @@ pluginManagement {
 
 rootProject.name = "relikquary"
 
-include("backend", "sandbox")
+include("backend", "sandbox", "frontend")

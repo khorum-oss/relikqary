@@ -62,3 +62,14 @@ tasks.withType<Test> {
     val s3mockJar = s3mock
     doFirst { systemProperty("relikquary.s3mockJar", s3mockJar.singleFile.absolutePath) }
 }
+
+// Opt-in: bundle the SvelteKit static build into the backend jar, served under /ui (see WebConfig).
+// Enable with `-PbundleFrontend`. Kept opt-in so the frontend stays a separable module by default.
+if (project.hasProperty("bundleFrontend")) {
+    tasks.named<Copy>("processResources") {
+        dependsOn(":frontend:npmBuild")
+        from(rootProject.layout.projectDirectory.dir("frontend/build")) {
+            into("static/ui")
+        }
+    }
+}

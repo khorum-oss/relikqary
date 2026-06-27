@@ -21,12 +21,33 @@ See the full specification, plan, and tasks under
 guide in [`specs/001-publish-resolve-mvp/quickstart.md`](specs/001-publish-resolve-mvp/quickstart.md).
 Project principles live in [`.specify/memory/constitution.md`](.specify/memory/constitution.md).
 
-## Build & run
+## Web UI
 
-Requires JDK 21 (provisioned by the Gradle toolchain).
+A SvelteKit web UI (in [`frontend/`](frontend/)) browses repositories, drills into artifacts and
+versions, shows file details (size, checksums, last-modified), downloads files, and deletes
+versions/files. It talks to the backend's JSON browse/manage API under `/api` (separate from the
+Maven protocol); reads are open, deletes require the `PUBLISH` role when auth is enabled.
 
 ```bash
-./gradlew build        # compile + detekt + tests (incl. a real publish/resolve round-trip) + coverage
+# Run standalone against a running backend (vite proxies /api + downloads to :8080):
+cd frontend && npm install && npm run dev          # http://localhost:5173
+# End-to-end browser test (starts a seeded backend + runs Playwright):
+cd frontend && bash scripts/e2e.sh
+```
+
+The UI is a separate, independently deployable module. To **bundle** it into the backend jar (served
+at `/ui`, same origin), build with `-PbundleFrontend`:
+
+```bash
+./gradlew :backend:bootJar -PbundleFrontend        # serves the UI at http://localhost:8080/ui/
+```
+
+## Build & run
+
+Requires JDK 21 (provisioned by the Gradle toolchain). Node 22 is needed only for the frontend.
+
+```bash
+./gradlew build        # backend: compile + detekt + tests (incl. a real publish/resolve round-trip) + coverage
 ```
 
 ### Run locally (auth disabled — no login)
