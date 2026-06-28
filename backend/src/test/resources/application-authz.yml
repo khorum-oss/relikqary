@@ -1,0 +1,33 @@
+# Topology for the feature 007 per-repository authorization integration tests (@ActiveProfiles("authz")).
+# Every repository entry is fully specified (explicit kind) so it cleanly shadows the base application.yml
+# list by index. Storage root is supplied per-test via @DynamicPropertySource.
+relikquary:
+  security:
+    enabled: true
+    users:
+      - username: alice
+        password: "{noop}pw"
+        roles: [platform]
+      - username: bob
+        password: "{noop}pw"
+        roles: []
+      - username: ci
+        password: "{noop}pw"
+        roles: [PUBLISH]
+  repositories:
+    - name: releases          # open hosted; publish defaults to the global PUBLISH role
+      kind: hosted
+      type: mixed
+    - name: privlib           # private hosted
+      kind: hosted
+      type: mixed
+      access:
+        read: [alice, "@platform"]
+        publish: [alice]
+        delete: [alice]
+    - name: openmirror        # open hosted; a group member
+      kind: hosted
+      type: mixed
+    - name: grp               # group over a private + an open member
+      kind: group
+      members: [privlib, openmirror]

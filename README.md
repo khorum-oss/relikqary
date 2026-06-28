@@ -87,6 +87,36 @@ publishing {
 
 Relikquary listens on `http://localhost:8080`. Resolving (Maven or Gradle) needs no credentials.
 
+### Per-repository authorization
+
+By default reads are open and writes need the global `PUBLISH` role. Any repository can additionally
+declare an `access` block granting **read**, **publish**, and **delete** to specific principals — a
+username, or a role written `@role`:
+
+```yaml
+relikquary:
+  repositories:
+    - name: releases            # no access block ⇒ open reads, PUBLISH-gated writes (unchanged)
+      type: release
+    - name: private-libs        # a private repository
+      type: mixed
+      access:
+        read:    [alice, "@platform"]
+        publish: [alice]
+        delete:  [alice]
+```
+
+- An action with **no list** keeps its default: read → open; publish/delete → global `PUBLISH` role.
+  An explicit list **overrides** the default for that action (a listed user is allowed even without the
+  global `PUBLISH` role; an unlisted `PUBLISH` holder is refused).
+- Denied requests return `401` (with a Basic challenge) when unauthenticated, or `403` when
+  authenticated without permission. An unknown repository is still `404` (existence is not secret).
+- Read authorization applies to both the Maven path and the browse API, over every file in the repo
+  (artifacts, `maven-metadata.xml`, checksums).
+- For a **group**, a read request is served by the first member that both has the artifact and permits
+  the user; a member that denies the user is skipped (so a private member never masks a public copy).
+- With `relikquary.security.enabled=false`, all per-repository rules are ignored — everything is open.
+
 ### Named repositories
 
 Relikquary serves **named, typed repositories** addressed by a path prefix — there is no implicit repo

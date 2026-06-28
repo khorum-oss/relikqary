@@ -6,8 +6,11 @@ import org.khorum.oss.relikquary.coordinate.PathKind
 import org.khorum.oss.relikquary.coordinate.RepositoryPath
 import org.khorum.oss.relikquary.proxy.UpstreamClient
 import org.khorum.oss.relikquary.proxy.UpstreamResponse
+import org.khorum.oss.relikquary.security.Action
+import org.khorum.oss.relikquary.security.RepositoryAuthorizer
 import org.khorum.oss.relikquary.storage.ArtifactStorage
 import org.khorum.oss.relikquary.storage.StoredArtifact
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
 
@@ -35,6 +38,7 @@ class RepositoryResolver(
     private val registry: RepositoryRegistry,
     private val storage: ArtifactStorage,
     private val upstream: UpstreamClient,
+    private val authorizer: RepositoryAuthorizer,
 ) {
 
     fun resolve(repoName: String, path: RepositoryPath): Resolution {
@@ -78,9 +82,16 @@ class RepositoryResolver(
         return StoredArtifact(ByteArrayInputStream(bytes), bytes.size.toLong())
     }
 
+    /**
+     * Resolves a group by first match, applying each member's READ policy (feature 007): a member that
+     * denies the requesting user is skipped like a non-serving member (permissive union), so a private
+     * member never masks a public copy and group reads never emit a 401 challenge.
+     */
     private fun group(repo: RepositoryProperties.Repo, path: RepositoryPath): Resolution {
+        val authentication = SecurityContextHolder.getContext().authentication
         var sawError = false
         for (member in repo.members) {
+            if (!authorizer.permits(registry.require(member), Action.READ, authentication)) continue
             when (val result = resolve(member, path)) {
                 is Resolution.Hit -> return result
                 Resolution.Miss -> Unit

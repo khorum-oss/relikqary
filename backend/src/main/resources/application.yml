@@ -8,6 +8,17 @@ relikquary:
   #       credentials (remoteUsername/remotePassword) come from env — never commit them.
   #   - group: read-only; resolves 'members' in order and returns the first match.
   # Proxy and group repos reject publishing (405).
+  #
+  # Any repository may add an 'access' block to scope read/publish/delete to specific principals
+  # (a username, or a role written "@role"). An action with no list keeps its default: read open;
+  # publish/delete gated by the global PUBLISH role. An explicit list overrides that default. Example:
+  #   - name: private-libs
+  #     access:
+  #       read:    [alice, "@platform"]
+  #       publish: [alice]
+  #       delete:  [alice]
+  # Reads are gated on both the Maven path and the browse API; denied ⇒ 401 (anonymous) / 403 (authed).
+  # When security.enabled is false, all per-repository rules are ignored.
   repositories:
     - name: releases
       type: release

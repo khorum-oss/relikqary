@@ -1,8 +1,8 @@
 package org.khorum.oss.relikquary.config
 
+import org.khorum.oss.relikquary.security.RepositoryAuthorizationManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.User
@@ -13,12 +13,16 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
 
 /**
- * Spring Security configuration for the repository protocol (feature 002, contracts/auth.md):
- * `PUT` (publish) requires the `PUBLISH` role; `GET`/`HEAD` (resolve) stay open. When
+ * Spring Security configuration for the repository protocol (features 002 + 007). When auth is enabled,
+ * every request is authorized by [RepositoryAuthorizationManager], which applies per-repository
+ * READ/PUBLISH/DELETE policy (defaulting to open reads and global-`PUBLISH`-gated writes). When
  * [SecurityProperties.enabled] is false, all requests are permitted (local-dev opt-out).
  */
 @Configuration
-class SecurityConfig(private val properties: SecurityProperties) {
+class SecurityConfig(
+    private val properties: SecurityProperties,
+    private val authorizationManager: RepositoryAuthorizationManager,
+) {
 
     @Bean
     fun passwordEncoder(): PasswordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
@@ -41,17 +45,11 @@ class SecurityConfig(private val properties: SecurityProperties) {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
         if (properties.enabled) {
             http.authorizeHttpRequests { auth ->
-                auth.requestMatchers(HttpMethod.PUT, "/**").hasRole(PUBLISH_ROLE)
-                    .requestMatchers(HttpMethod.DELETE, "/**").hasRole(PUBLISH_ROLE)
-                    .anyRequest().permitAll()
+                auth.anyRequest().access(authorizationManager)
             }.httpBasic { it.realmName("relikquary") }
         } else {
             http.authorizeHttpRequests { it.anyRequest().permitAll() }
         }
         return http.build()
-    }
-
-    private companion object {
-        const val PUBLISH_ROLE = "PUBLISH"
     }
 }

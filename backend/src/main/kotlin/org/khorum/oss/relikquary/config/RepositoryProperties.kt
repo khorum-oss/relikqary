@@ -27,5 +27,18 @@ data class RepositoryProperties(
         val remotePassword: String? = null,
         /** GROUP: ordered member repository names, resolved by first match. */
         val members: List<String> = emptyList(),
+        /** Optional per-action access policy (feature 007); null ⇒ defaults preserve current behaviour. */
+        val access: RepositoryAccess? = null,
+    )
+
+    /**
+     * Per-repository authorization grants (feature 007). Each list holds principals — a username, or a
+     * role written `@role`. A null list means the default for that action: READ open; PUBLISH/DELETE
+     * gated by the global `PUBLISH` role. An explicit list overrides the default for that action.
+     */
+    data class RepositoryAccess(
+        val read: List<String>? = null,
+        val publish: List<String>? = null,
+        val delete: List<String>? = null,
     )
 }
