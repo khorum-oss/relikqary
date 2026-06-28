@@ -71,8 +71,9 @@ view surfaces storage + proxy-upstream state, with upstream outages degraded but
   `{repo: {reachable}}` only — no `remoteUsername`/`remotePassword`. Not a member of liveness/readiness.
 - [ ] T013 [US1] Integration test `integration/ProbesTest.kt`: liveness + readiness return UP/200 with no
   credentials; pointing storage at a broken root makes readiness `DOWN`/503 while liveness stays UP;
-  restoring storage recovers readiness to 200 (FR-002, SC-001); assert no secret strings in health output
-  (FR-009).
+  restoring storage recovers readiness to 200 (FR-002, SC-001); assert the detailed `/actuator/health`
+  output contains none of the *actual configured* secrets — the S3 `accessKey`/`secretKey` and any proxy
+  `remoteUsername`/`remotePassword` — not merely arbitrary strings (FR-009).
 - [ ] T014 [US1] Integration test `integration/UpstreamHealthTest.kt` (StubUpstream stopped/failing): the
   detailed `/actuator/health` reports `upstreams` DEGRADED and overall DEGRADED at HTTP 200, while
   `/actuator/health/readiness` and `/liveness` stay UP/200 (FR-003, SC-005).
@@ -108,7 +109,8 @@ cache hit/miss + upstream outcomes, cleanup outcomes, and storage usage.
   `relikquary_resolve_total`, `relikquary_proxy_cache_total{result="hit"|"miss"}`,
   `relikquary_proxy_upstream_total`, `relikquary_cleanup_items_removed_total`,
   `relikquary_cleanup_bytes_reclaimed_total`, and `relikquary_storage_usage_bytes` are present and reflect
-  the traffic (FR-004, SC-002); assert no secret strings in the scrape (FR-009).
+  the traffic (FR-004, SC-002); assert the scrape body contains none of the *actual configured* secrets
+  (S3 `accessKey`/`secretKey`, proxy `remoteUsername`/`remotePassword`, user passwords) (FR-009).
 
 **Checkpoint**: a monitoring system can scrape the full metric set in Prometheus format.
 
@@ -136,7 +138,9 @@ flag off, no such line is emitted.
 - [ ] T024 [US3] Integration test `integration/RequestLogTest.kt` (attach a Logback `ListAppender` to the
   `relikquary.access` logger): with the flag on, a resolve emits exactly one JSON line carrying method/
   repository/path/status/bytes/duration; an authenticated publish includes `principal`, an anonymous
-  request omits it; with the flag off (default) no line is emitted (FR-005, SC-003).
+  request omits it; with the flag off (default) no line is emitted (FR-005, SC-003). Include a case where
+  the response sets `Content-Length` without streaming a body, asserting the logged `bytes` uses the
+  header-fallback path (T021).
 
 **Checkpoint**: operators can ship/query one structured line per request; default logging unchanged.
 

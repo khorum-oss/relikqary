@@ -1,6 +1,6 @@
 # Feature Specification: Observability & Operational Readiness
 
-**Feature Branch**: `010-observability`
+**Feature Branch**: `claude/spec-010-observability` (feature directory `specs/010-observability`)
 
 **Created**: 2026-06-28
 
