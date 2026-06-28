@@ -1,7 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // Drives the real built SvelteKit app (via `vite dev`, which proxies /api and repo downloads to the
-// backend) in the pre-installed Chromium. The backend must be running on :8080 (see the e2e script).
+// backend) in a real Chromium. The backend must be running on :8080 (see scripts/e2e.sh).
+// RELIKQUARY_CHROMIUM_PATH points at a pre-installed Chromium (set by scripts/e2e.sh for this
+// environment); when unset (e.g. CI), Playwright uses its own installed browser.
+const chromiumPath = process.env.RELIKQUARY_CHROMIUM_PATH;
+
 export default defineConfig({
   testDir: 'tests',
   timeout: 30_000,
@@ -9,7 +13,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5173',
     launchOptions: {
-      executablePath: '/opt/pw-browsers/chromium',
+      ...(chromiumPath ? { executablePath: chromiumPath } : {}),
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
     },
   },

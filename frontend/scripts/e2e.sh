@@ -35,4 +35,9 @@ printf 'deadbeef'       | "${CURL[@]}" -X PUT --data-binary @- "$base.jar.sha1"
 
 echo "Running Playwright..."
 cd "$ROOT/frontend"
+# Prefer a pre-installed Chromium when present (this environment); otherwise let Playwright use its
+# own installed browser (e.g. CI after `npx playwright install`).
+if [ -z "${RELIKQUARY_CHROMIUM_PATH:-}" ] && [ -x /opt/pw-browsers/chromium ]; then
+  export RELIKQUARY_CHROMIUM_PATH=/opt/pw-browsers/chromium
+fi
 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm run test:e2e

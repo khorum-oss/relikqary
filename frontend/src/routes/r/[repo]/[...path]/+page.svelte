@@ -9,7 +9,7 @@
     type FileDetails,
   } from '$lib/api';
 
-  let repo = $derived($page.params.repo);
+  let repo = $derived($page.params.repo ?? '');
   let path = $derived($page.params.path ?? '');
 
   let contents = $state<ContentsResponse | null>(null);
