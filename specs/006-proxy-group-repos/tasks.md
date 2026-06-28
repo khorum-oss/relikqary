@@ -47,7 +47,8 @@ without upstream contact; metadata is pass-through; missing→404, upstream erro
 byte-for-byte), then again with the upstream stopped (served from cache).
 
 - [ ] T009 [US1] Add `proxy/UpstreamClient.kt` over JDK `HttpClient` (with `ProxySelector.getDefault()`,
-  optional Basic auth from `remoteUsername`/`remotePassword`); `fetch(repo, artifactPath): UpstreamResponse`
+  `followRedirects(Redirect.NORMAL)` so upstream 301/302 — common on Maven Central — resolve rather than
+  fail, optional Basic auth from `remoteUsername`/`remotePassword`); `fetch(repo, artifactPath): UpstreamResponse`
   sealed `{ Found(stream, contentLength?), NotFound, Error }` (404/410→NotFound; 200→Found; connect/
   timeout/5xx→Error).
 - [ ] T010 [US1] Implement the **PROXY** branch in `repository/RepositoryResolver.kt`: `maven-metadata.xml`
@@ -122,7 +123,7 @@ matrix still pass.
 
 ## Dependencies
 
-Foundational (P2: T002–T008) blocks everything. US1 (T009–T016) and US2 (T017–T020) both build on the
+Foundational (Phase 2, T002–T008) blocks everything. US1 (T009–T016) and US2 (T017–T020) both build on the
 resolver; US2's hosted-only first-match is independent, while the combined hosted+proxy group scenario
 (T020) depends on US1's proxy branch. US3 (T021–T023) depends on the controller `405` wiring (T007) and
 benefits from US1/US2 repos existing. Polish (T024–T025) last.
