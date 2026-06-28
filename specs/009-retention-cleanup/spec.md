@@ -12,6 +12,18 @@ eviction (bound the cache by age/size; evicted artifacts safely re-fetched). Run
 on-demand, reports what it removed, supports dry-run. Opt-in per repository, no-op when unconfigured,
 preserves faithful storage, works on filesystem and S3."
 
+## Clarifications
+
+### Session 2026-06-28
+
+- Q: Proxy cache eviction "age" basis? → A: Cached-at — measured from the artifact's stored last-modified
+  time (no per-request last-access tracking).
+- Q: Which retention dimensions are configurable? → A: Snapshot repos: keep-last-N and/or maximum build
+  age; proxy caches: maximum cached age and/or a total cache size budget. Each dimension is optional.
+- Q: How is an on-demand run triggered? → A: An authorized management API endpoint (under `/api`) that
+  runs cleanup (with an optional dry-run flag) and returns the report; consistent with the existing
+  browse/manage API and auth model.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Snapshot retention keeps storage bounded (Priority: P1)
@@ -119,7 +131,7 @@ while storage is unchanged; trigger a real run and confirm the report matches wh
 - **FR-005**: An artifact evicted from a proxy cache MUST be transparently re-fetched from the upstream on
   the next request (eviction loses no data).
 - **FR-006**: Cleanup MUST run automatically on a configurable schedule and MUST also be triggerable on
-  demand by an authorized operator.
+  demand via an authorized management API endpoint (under `/api`) that returns the run's report.
 - **FR-007**: Cleanup MUST support a dry-run mode that reports the artifacts/builds it would remove and
   the space it would reclaim, without deleting anything.
 - **FR-008**: Every cleanup run MUST report what it removed — the number of artifacts/builds removed and
@@ -163,13 +175,13 @@ while storage is unchanged; trigger a real run and confirm the report matches wh
   in artifact filenames within a `-SNAPSHOT` version directory; all files sharing that build identifier
   are removed together. `maven-metadata.xml` is always retained.
 - **Proxy eviction age basis**: "age" is measured from when an artifact was cached (its stored
-  last-modified time); tracking per-request last-access times is out of scope for this feature. (To
-  confirm in `/speckit-clarify`.)
-- **Retention dimensions**: keep-last-N and maximum-age for snapshots, and maximum-age and size-budget for
-  proxy caches, are independently configurable; sensible defaults are documented and a policy may set one
-  or both dimensions. (To confirm in `/speckit-clarify`.)
-- **Scheduling**: cleanup runs on a single configurable fixed interval; the on-demand trigger is an
-  authorized operator action. Per-repository schedules are out of scope.
+  last-modified time); tracking per-request last-access times is out of scope for this feature.
+- **Retention dimensions**: snapshot repositories use keep-last-N and/or maximum build age; proxy caches
+  use maximum cached age and/or a total cache size budget. Each dimension is independently optional (a
+  policy may set one or both); sensible defaults are documented.
+- **Scheduling & trigger**: cleanup runs on a single configurable fixed interval; the on-demand trigger
+  is an authorized management API endpoint (under `/api`) that accepts a dry-run flag and returns the
+  report. Per-repository schedules are out of scope.
 - **Mixed repositories**: snapshot retention applies only to snapshot coordinates; release coordinates in
   any repository are never touched.
 - **Concurrency**: cleanup is best-effort and safe under concurrent publish/resolve; correctness does not
