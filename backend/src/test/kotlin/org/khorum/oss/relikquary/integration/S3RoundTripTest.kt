@@ -72,6 +72,21 @@ class S3RoundTripTest {
         assertTrue(store.exists("releases/com/example/lib/2.0.0/lib-2.0.0.jar"))
     }
 
+    @Test
+    fun `walk recursively enumerates files with keys, sizes, and last-modified (feature 009 parity)`() {
+        val store = storage()
+        store.write("walk/com/acme/w/1.0.0-SNAPSHOT/w-1.jar", byteArrayOf(1, 2, 3).inputStream())
+        store.write("walk/com/acme/w/1.0.0-SNAPSHOT/w-2.jar", byteArrayOf(4).inputStream())
+
+        val walked = store.walk("walk/com/acme/w/").associateBy { it.key }
+        assertEquals(
+            setOf("walk/com/acme/w/1.0.0-SNAPSHOT/w-1.jar", "walk/com/acme/w/1.0.0-SNAPSHOT/w-2.jar"),
+            walked.keys,
+        )
+        assertEquals(3L, walked.getValue("walk/com/acme/w/1.0.0-SNAPSHOT/w-1.jar").sizeBytes)
+        assertTrue(walked.values.all { it.lastModified != null })
+    }
+
     companion object {
         private const val BUCKET = "relikquary"
         private lateinit var process: Process

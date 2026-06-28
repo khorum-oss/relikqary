@@ -3,6 +3,8 @@ package org.khorum.oss.relikquary.config
 import org.khorum.oss.relikquary.repository.RepositoryKind
 import org.khorum.oss.relikquary.repository.RepositoryType
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.util.unit.DataSize
+import java.time.Duration
 
 /**
  * The set of named repositories Relikquary serves. Each request is addressed by a repository name
@@ -29,6 +31,30 @@ data class RepositoryProperties(
         val members: List<String> = emptyList(),
         /** Optional per-action access policy (feature 007); null ⇒ defaults preserve current behaviour. */
         val access: RepositoryAccess? = null,
+        /** Optional retention/eviction policy (feature 009); null ⇒ this repository is never cleaned. */
+        val retention: RetentionPolicy? = null,
+    )
+
+    /**
+     * Per-repository retention/cleanup (feature 009). [snapshot] applies to hosted snapshot/mixed repos;
+     * [cache] applies to proxy repos. Each leaf field is independently optional with no implicit default —
+     * an absent dimension is simply not applied.
+     */
+    data class RetentionPolicy(
+        val snapshot: SnapshotRetention? = null,
+        val cache: CacheEviction? = null,
+    )
+
+    /** Snapshot retention: keep the [keepLast] newest builds per artifact and/or purge builds older than [maxAge]. */
+    data class SnapshotRetention(
+        val keepLast: Int? = null,
+        val maxAge: Duration? = null,
+    )
+
+    /** Proxy cache eviction: evict cached artifacts older than [maxAge] and/or keep the cache within [maxSize]. */
+    data class CacheEviction(
+        val maxAge: Duration? = null,
+        val maxSize: DataSize? = null,
     )
 
     /**

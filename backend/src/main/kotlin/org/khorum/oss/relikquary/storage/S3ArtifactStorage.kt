@@ -82,6 +82,14 @@ class S3ArtifactStorage(
         return entries.sortedWith(compareBy({ !it.isDirectory }, { it.name }))
     }
 
+    override fun walk(prefix: String): List<StoredObject> {
+        val norm = normalizeFolder(prefix)
+        val request = ListObjectsV2Request.builder().bucket(bucket).prefix(norm).build()
+        return s3.listObjectsV2Paginator(request).contents()
+            .map { StoredObject(it.key(), it.size(), it.lastModified()) }
+            .toList()
+    }
+
     override fun delete(key: String): Boolean {
         if (!exists(key)) return false
         s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build())

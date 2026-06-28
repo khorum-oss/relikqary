@@ -1,0 +1,23 @@
+# Topology for feature 009 cleanup integration tests (@ActiveProfiles("cleanup")). Fully specifies each
+# repository (explicit kind) so it cleanly shadows the base application.yml list by index. The proxy's
+# remoteUrl resolves a placeholder a test overrides to a local stub. Storage root is per-test.
+relikquary:
+  repositories:
+    - name: releases          # release repo — must never be touched by cleanup
+      kind: hosted
+      type: release
+    - name: snapshots         # snapshot retention: keep the 3 newest builds
+      kind: hosted
+      type: snapshot
+      retention:
+        snapshot:
+          keepLast: 3
+    - name: cacheproxy        # proxy cache eviction: evict everything cached before "now"
+      kind: proxy
+      remoteUrl: ${RELIKQUARY_TEST_UPSTREAM:http://127.0.0.1:1}
+      retention:
+        cache:
+          maxAge: PT0S
+    - name: public            # group over the two hosted members
+      kind: group
+      members: [releases, snapshots]

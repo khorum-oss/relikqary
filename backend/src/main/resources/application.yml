@@ -62,6 +62,18 @@ relikquary:
     #     password: "{bcrypt}$2a$10$..."
     #     roles: [PUBLISH]
     users: []
+  # Retention/cleanup (feature 009) reclaims storage. Off by default; enabling it runs cleanup every
+  # 'interval'. Per-repository policies live in the 'retention' block on each repository above:
+  #   - snapshot repos: retention.snapshot.{keepLast, maxAge} — keep the N newest builds and/or purge
+  #       builds older than an age; the newest build and maven-metadata.xml are always kept; releases
+  #       are never touched.
+  #   - proxy repos: retention.cache.{maxAge, maxSize} — evict cached artifacts older than an age and/or
+  #       keep the cache within a size budget; evicted artifacts re-fetch on the next request.
+  # A repo without a 'retention' block is never cleaned. Trigger on demand with an authorized
+  # POST /api/cleanup (optional ?dryRun=true reports the selection without deleting).
+  cleanup:
+    enabled: false
+    interval: PT1H
 
 spring:
   application:

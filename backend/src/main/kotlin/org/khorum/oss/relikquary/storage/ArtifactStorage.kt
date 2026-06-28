@@ -27,7 +27,20 @@ interface ArtifactStorage {
 
     /** Recursively deletes every file under [prefix]. Returns the number of files removed. */
     fun deletePrefix(prefix: String): Int
+
+    /**
+     * Recursively lists every file under [prefix] (empty = whole store) with its full key, size, and
+     * last-modified time. Used by retention/cleanup (feature 009); never returns directories.
+     */
+    fun walk(prefix: String): List<StoredObject>
 }
+
+/** A stored file's full key, size, and last-modified time (feature 009 cleanup enumeration). */
+data class StoredObject(
+    val key: String,
+    val sizeBytes: Long,
+    val lastModified: Instant? = null,
+)
 
 /** A readable handle to a stored artifact and its size in bytes. */
 class StoredArtifact(

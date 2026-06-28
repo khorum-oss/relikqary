@@ -54,6 +54,12 @@ class RepositoryAuthorizer(private val security: SecurityProperties) {
         }
     }
 
+    /** Management actions (e.g. cleanup, feature 009) require the global `PUBLISH` authority. */
+    fun permitsManagement(authentication: Authentication?): Boolean {
+        if (!security.enabled) return true
+        return hasRole(authentication, PUBLISH_ROLE)
+    }
+
     private fun hasRole(authentication: Authentication?, role: String): Boolean {
         if (authentication == null || !authentication.isAuthenticated || isAnonymous(authentication)) {
             return false

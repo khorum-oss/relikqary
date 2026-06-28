@@ -73,6 +73,20 @@ class FilesystemArtifactStorage(props: StorageProperties) : ArtifactStorage {
         }
     }
 
+    override fun walk(prefix: String): List<StoredObject> {
+        val base = resolve(prefix)
+        if (!Files.isDirectory(base)) return emptyList()
+        Files.walk(base).use { stream ->
+            return stream
+                .filter { Files.isRegularFile(it) && !it.name.startsWith(".relikquary-") }
+                .map { path ->
+                    val key = root.relativize(path).toString().replace('\\', '/')
+                    StoredObject(key, Files.size(path), Files.getLastModifiedTime(path).toInstant())
+                }
+                .toList()
+        }
+    }
+
     override fun delete(key: String): Boolean {
         val path = resolve(key)
         if (!Files.isRegularFile(path)) return false

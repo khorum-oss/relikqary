@@ -169,6 +169,41 @@ repositories { maven { url = uri("http://localhost:8080/public") } }
 A proxy or group request for something present nowhere returns 404; an upstream outage on a cache miss
 returns 502.
 
+### Retention & cleanup
+
+Reclaim storage with opt-in per-repository policies (off until configured). Snapshot repos keep the
+newest builds; proxy caches stay bounded; releases and `maven-metadata.xml` are never touched.
+
+```yaml
+relikquary:
+  cleanup:
+    enabled: true            # run cleanup on a schedule (default false)
+    interval: PT1H
+  repositories:
+    - name: snapshots
+      type: snapshot
+      retention:
+        snapshot:
+          keepLast: 5        # keep the 5 newest builds per artifact
+          maxAge: P30D       # and/or purge builds older than 30 days
+    - name: maven-central
+      kind: proxy
+      remoteUrl: https://repo1.maven.org/maven2
+      retention:
+        cache:
+          maxAge: P14D       # evict cached artifacts older than 14 days
+          maxSize: 5GB       # and/or keep the cache within a size budget
+```
+
+Trigger a run on demand (requires the `PUBLISH` role when auth is enabled), or preview with a dry-run:
+
+```bash
+curl -u ci:secret -X POST 'http://localhost:8080/api/cleanup?dryRun=true'   # report only
+curl -u ci:secret -X POST  http://localhost:8080/api/cleanup                # run + report
+```
+
+Evicted proxy artifacts re-fetch from the upstream on the next request, so cache eviction is safe.
+
 ### Object storage (S3 / DigitalOcean Spaces)
 
 Set `relikquary.storage.backend=s3` and point it at any S3-compatible endpoint (AWS S3, DigitalOcean

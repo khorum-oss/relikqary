@@ -23,8 +23,9 @@ import java.util.function.Supplier
  * - `PUT` to a PROXY/GROUP ⇒ grant (the controller returns `405`; read-only kinds precede authz);
  * - `GET /api/repositories` (the list), `/api`, the bundled UI, and unrecognized shapes ⇒ grant.
  *
- * A denied decision becomes `401` (anonymous → Basic challenge) or `403` (authenticated) via Spring's
- * standard exception translation.
+ * The management endpoint `/api/cleanup` (feature 009) is not repo-scoped; it requires the global
+ * `PUBLISH` authority. A denied decision becomes `401` (anonymous → Basic challenge) or `403`
+ * (authenticated) via Spring's standard exception translation.
  */
 @Component
 class RepositoryAuthorizationManager(
@@ -36,6 +37,9 @@ class RepositoryAuthorizationManager(
         authentication: Supplier<out Authentication?>,
         context: RequestAuthorizationContext,
     ): AuthorizationDecision {
+        if (decodedPath(context.request) == MANAGEMENT_CLEANUP) {
+            return AuthorizationDecision(authorizer.permitsManagement(authentication.get()))
+        }
         val target = target(context.request) ?: return GRANT
         val repo = repoOrNull(target.repoName) ?: return GRANT
         if (repo.kind == RepositoryKind.GROUP) return GRANT
@@ -45,12 +49,11 @@ class RepositoryAuthorizationManager(
 
     private data class Target(val repoName: String, val action: Action)
 
+    private fun decodedPath(request: HttpServletRequest): String =
+        URLDecoder.decode(request.requestURI.removePrefix(request.contextPath), StandardCharsets.UTF_8).trimStart('/')
+
     private fun target(request: HttpServletRequest): Target? {
-        val path = URLDecoder.decode(
-            request.requestURI.removePrefix(request.contextPath),
-            StandardCharsets.UTF_8,
-        ).trimStart('/')
-        val segments = path.split('/').filter { it.isNotEmpty() }
+        val segments = decodedPath(request).split('/').filter { it.isNotEmpty() }
         return if (segments.firstOrNull() == "api") browseTarget(request, segments) else mavenTarget(request, segments)
     }
 
@@ -90,5 +93,8 @@ class RepositoryAuthorizationManager(
 
         /** `api / repositories / {repo} / ...` — the repo name is the third segment. */
         const val REPO_SEGMENT_INDEX = 2
+
+        /** Non-repo-scoped management endpoint requiring the global PUBLISH authority (feature 009). */
+        const val MANAGEMENT_CLEANUP = "api/cleanup"
     }
 }
