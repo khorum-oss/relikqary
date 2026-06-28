@@ -5,6 +5,7 @@ import org.khorum.oss.relikquary.config.PublishProperties
 import org.khorum.oss.relikquary.config.RepositoryProperties
 import org.khorum.oss.relikquary.config.SecurityProperties
 import org.khorum.oss.relikquary.config.StorageProperties
+import org.khorum.oss.relikquary.observability.ObservabilityProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
@@ -18,6 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
     SecurityProperties::class,
     RepositoryProperties::class,
     CleanupProperties::class,
+    ObservabilityProperties::class,
 )
 class RelikquaryApplication
 

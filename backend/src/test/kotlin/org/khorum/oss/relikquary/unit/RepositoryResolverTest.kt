@@ -8,8 +8,10 @@ import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.khorum.oss.relikquary.config.RepositoryProperties
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.khorum.oss.relikquary.config.RepositoryProperties.Repo
 import org.khorum.oss.relikquary.config.SecurityProperties
+import org.khorum.oss.relikquary.observability.metrics.RepositoryMetrics
 import org.khorum.oss.relikquary.security.RepositoryAuthorizer
 import org.khorum.oss.relikquary.coordinate.RepositoryPath
 import org.khorum.oss.relikquary.proxy.UpstreamClient
@@ -38,7 +40,8 @@ class RepositoryResolverTest {
     private val upstream: UpstreamClient = mockk(relaxed = false)
     // Authz disabled here so these resolution tests are unaffected by per-repo access (feature 007).
     private val authorizer = RepositoryAuthorizer(SecurityProperties(enabled = false))
-    private val resolver = RepositoryResolver(registry, storage, upstream, authorizer)
+    private val metrics = RepositoryMetrics(SimpleMeterRegistry())
+    private val resolver = RepositoryResolver(registry, storage, upstream, authorizer, metrics)
 
     private val jar = RepositoryPath.of("com/example/widget/1.0.0/widget-1.0.0.jar")
     private val metadata = RepositoryPath.of("com/example/widget/maven-metadata.xml")

@@ -109,6 +109,13 @@ class FilesystemArtifactStorage(props: StorageProperties) : ArtifactStorage {
         return count
     }
 
+    override fun probe(): StorageProbe =
+        if (Files.isDirectory(root) && Files.isWritable(root)) {
+            StorageProbe(healthy = true, backend = "filesystem")
+        } else {
+            StorageProbe(healthy = false, backend = "filesystem", detail = "storage root is not a writable directory")
+        }
+
     /** Removes now-empty directories up toward (but not including) the storage root. */
     private fun pruneEmptyParents(start: Path?) {
         var current = start

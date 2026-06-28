@@ -216,6 +216,47 @@ RELIKQUARY_S3_ACCESS_KEY=... RELIKQUARY_S3_SECRET_KEY=... \
 ./gradlew :backend:bootRun --args='--relikquary.storage.backend=s3'
 ```
 
+### Observability & operational readiness
+
+Relikquary exposes liveness/readiness probes, Prometheus metrics, and an opt-in structured request log
+under `/actuator` — separate from the Maven (`/{repo}/…`) and browse (`/api`) surfaces.
+
+**Probes** are public (orchestrators can't authenticate). Liveness reflects process health; readiness
+also reflects whether the configured storage backend is reachable/writable, so a storage-detached
+instance is pulled from rotation without being restarted:
+
+```bash
+curl http://localhost:8080/actuator/health/liveness    # {"status":"UP"}
+curl http://localhost:8080/actuator/health/readiness   # 503 when storage is unreachable
+```
+
+**Metrics** are scraped in Prometheus format and cover HTTP request rate/latency/error
+(`http_server_requests_*`), publish/resolve counts, proxy cache hit/miss and upstream outcomes, cleanup
+items-removed/bytes-reclaimed, and storage usage:
+
+```bash
+curl -u ci:secret http://localhost:8080/actuator/prometheus | grep relikquary_
+```
+
+A proxy upstream being unreachable shows as `DEGRADED` in the detailed health view (`/actuator/health`,
+HTTP 200) **without** failing liveness or readiness.
+
+**Structured request logging** is opt-in (off by default). When enabled, each request emits one JSON line
+on the `relikquary.access` logger with method, repository, path, status, bytes, duration, and the
+authenticated principal (omitted when anonymous):
+
+```yaml
+relikquary:
+  observability:
+    request-log:
+      enabled: true
+```
+
+**Authorization**: only the liveness and readiness probes are public. Every other operational endpoint
+(detailed health, metrics, info, …) requires the global `PUBLISH` role when security is enabled (`401`
+unauthenticated, `403` authenticated-without-role); when security is disabled they are all open. Health
+and metrics output never contains storage/upstream credentials or passwords.
+
 ## Configuration
 
 | Property | Default | Description |
@@ -236,3 +277,10 @@ RELIKQUARY_S3_ACCESS_KEY=... RELIKQUARY_S3_SECRET_KEY=... \
 | `relikquary.publish.release-policy` | `reject` | `reject` or `overwrite` for re-publishing an existing release |
 | `relikquary.security.enabled` | `true` | Set `false` to disable auth (open publishing) — used by the `local` profile |
 | `relikquary.security.users` | _(empty)_ | Publishers: `{username, password ({bcrypt}…/{noop}…), roles}` |
+| `relikquary.cleanup.enabled` | `false` | Run retention/cleanup on a schedule |
+| `relikquary.cleanup.interval` | `PT1H` | Schedule interval (ISO-8601 duration) |
+| `relikquary.observability.request-log.enabled` | `false` | Emit one structured (JSON) log line per request |
+| `relikquary.observability.storage-probe-ttl` | `PT2S` | TTL cache for the storage readiness probe |
+| `relikquary.observability.upstream-health-ttl` | `PT30S` | TTL cache for proxy-upstream reachability checks |
+| `relikquary.observability.storage-usage-refresh` | `PT5M` | Refresh interval for the storage-usage gauges |
+| `management.endpoints.web.exposure.include` | `health,info,prometheus,metrics` | Exposed operational endpoints |

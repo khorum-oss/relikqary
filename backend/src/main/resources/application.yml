@@ -74,6 +74,54 @@ relikquary:
   cleanup:
     enabled: false
     interval: PT1H
+  # Observability (feature 010). Liveness/readiness probes and Prometheus metrics are served under
+  # /actuator (see the 'management' block below); only the probes are public — all other operational
+  # endpoints require the global PUBLISH role when security is enabled (open when it is disabled).
+  observability:
+    request-log:
+      # Opt-in structured (JSON) per-request log line on the 'relikquary.access' logger (method,
+      # repository, path, status, bytes, duration, principal). Off by default; normal logging is
+      # unchanged when off.
+      enabled: false
+      include-query-string: false
+    # Cheap-probe TTL caches (keep readiness scrapes and the storage-usage gauge off the hot path).
+    storage-probe-ttl: PT2S
+    upstream-health-ttl: PT30S
+    storage-usage-refresh: PT5M
+
+# Operational surface (feature 010). Probes: /actuator/health/liveness (process) and
+# /actuator/health/readiness (storage-gated). Metrics: /actuator/prometheus. A proxy-upstream outage
+# surfaces as DEGRADED in the detailed health view (HTTP 200) without failing liveness/readiness.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      # Detail carries no secrets and the detailed endpoint is operator-gated when security is on, so
+      # showing components is safe and gives local-dev parity when security is off.
+      show-details: always
+      show-components: always
+      group:
+        liveness:
+          include:
+            - livenessState
+        readiness:
+          include:
+            - readinessState
+            - storage
+      status:
+        # Severity order: a proxy-upstream outage is DEGRADED (less severe than DOWN) and maps to HTTP
+        # 200 so the detailed health endpoint does not flap to 503 on a transient upstream blip. Setting
+        # http-mapping replaces the defaults, so DOWN/OUT_OF_SERVICE → 503 must be restated here.
+        order: [DOWN, OUT_OF_SERVICE, DEGRADED, UP, UNKNOWN]
+        http-mapping:
+          DOWN: 503
+          OUT_OF_SERVICE: 503
+          DEGRADED: 200
 
 spring:
   application:

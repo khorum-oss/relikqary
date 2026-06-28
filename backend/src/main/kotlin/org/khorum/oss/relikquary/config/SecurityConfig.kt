@@ -48,7 +48,12 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
         if (properties.enabled) {
             http.authorizeHttpRequests { auth ->
-                auth.anyRequest().access(authorizationManager)
+                // Orchestrator probes stay open; every other operational endpoint (detailed health,
+                // metrics, info, …) requires the global PUBLISH role (feature 010). The Maven/`/api`
+                // surface continues through the repository authorization manager unchanged.
+                auth.requestMatchers("/actuator/health/liveness", "/actuator/health/readiness").permitAll()
+                    .requestMatchers("/actuator/**").hasRole("PUBLISH")
+                    .anyRequest().access(authorizationManager)
             }.httpBasic { it.authenticationEntryPoint(entryPoint()) }
         } else {
             http.authorizeHttpRequests { it.anyRequest().permitAll() }

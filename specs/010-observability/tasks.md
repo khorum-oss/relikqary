@@ -12,17 +12,17 @@ regenerated.
 
 ## Phase 1: Setup
 
-- [ ] T001 Add `spring-boot-starter-actuator` and `micrometer-registry-prometheus` (BOM-managed, no
+- [X] T001 Add `spring-boot-starter-actuator` and `micrometer-registry-prometheus` (BOM-managed, no
   explicit version) to `gradle/libs.versions.toml` `[libraries]` and wire both as `implementation` in
   `backend/build.gradle.kts`, mirroring the existing Spring starters.
-- [ ] T002 Regenerate `gradle/verification-metadata.xml` for the two new deps via
+- [X] T002 Regenerate `gradle/verification-metadata.xml` for the two new deps via
   `./gradlew --write-verification-metadata sha256 build` (verification stays enabled; metadata extended,
   never disabled).
-- [ ] T003 Add `observability/ObservabilityProperties.kt`
+- [X] T003 Add `observability/ObservabilityProperties.kt`
   (`@ConfigurationProperties("relikquary.observability")`: `requestLog.enabled=false`,
   `requestLog.includeQueryString=false`, `storageProbeTtl=PT2S`, `upstreamHealthTtl=PT30S`,
   `storageUsageRefresh=PT5M`); register it in `RelikquaryApplication.kt` `@EnableConfigurationProperties`.
-- [ ] T004 Configure `management.*` in `backend/src/main/resources/application.yml`: expose
+- [X] T004 Configure `management.*` in `backend/src/main/resources/application.yml`: expose
   `health,info,prometheus,metrics`; `endpoint.health.probes.enabled=true`; `show-details=always` +
   `show-components=always`; health groups `liveness=livenessState` and `readiness=readinessState,storage`;
   custom status `order: DOWN,OUT_OF_SERVICE,DEGRADED,UP,UNKNOWN` and `http-mapping.DEGRADED=200`; document
@@ -33,12 +33,12 @@ regenerated.
 
 ## Phase 2: Foundational (blocking prerequisites for all stories)
 
-- [ ] T005 Gate the management surface in `config/SecurityConfig.kt` (security-enabled branch, before
+- [X] T005 Gate the management surface in `config/SecurityConfig.kt` (security-enabled branch, before
   `anyRequest().access(authorizationManager)`): `requestMatchers("/actuator/health/liveness",
   "/actuator/health/readiness").permitAll()` then `requestMatchers("/actuator/**").hasRole("PUBLISH")`.
   Leave `anyRequest().access(authorizationManager)` and the disabled-security `permitAll` branch unchanged
   (open when security is off).
-- [ ] T006 [P] Integration test `integration/OperationalAuthTest.kt` (`@SpringBootTest(RANDOM_PORT)` +
+- [X] T006 [P] Integration test `integration/OperationalAuthTest.kt` (`@SpringBootTest(RANDOM_PORT)` +
   `HttpClient`, authz profile): `/actuator/health/liveness` + `/readiness` → 200 with no credentials;
   `/actuator/prometheus`, `/actuator/metrics`, `/actuator/health` (root) → 401 anon, 403
   authenticated-non-publisher, 200 publisher; with `relikquary.security.enabled=false` all are open.
@@ -53,28 +53,28 @@ view surfaces storage + proxy-upstream state, with upstream outages degraded but
 **Independent test**: Probe liveness/readiness with no credentials → UP/200; break storage → readiness
 503, restore → 200; with a down proxy upstream the detailed health is DEGRADED while probes stay UP.
 
-- [ ] T007 [US1] Add `probe(): StorageProbe` to `storage/ArtifactStorage.kt` and the `StorageProbe(healthy:
+- [X] T007 [US1] Add `probe(): StorageProbe` to `storage/ArtifactStorage.kt` and the `StorageProbe(healthy:
   Boolean, backend: String, detail: String?)` type (side-effect-free; never returns secrets).
-- [ ] T008 [US1] Implement `probe` in `storage/FilesystemArtifactStorage.kt` (`isDirectory(root) &&
+- [X] T008 [US1] Implement `probe` in `storage/FilesystemArtifactStorage.kt` (`isDirectory(root) &&
   isWritable(root)`, no file written, `backend="filesystem"`) and `storage/S3ArtifactStorage.kt`
   (`headBucket`, no object written, `backend="s3"`; non-secret `detail` on failure).
-- [ ] T009 [P] [US1] Unit test `unit/StorageProbeTest.kt` (`@TempDir`): writable root ⇒ healthy; missing/
+- [X] T009 [P] [US1] Unit test `unit/StorageProbeTest.kt` (`@TempDir`): writable root ⇒ healthy; missing/
   non-writable root ⇒ not healthy with a non-secret detail; backend label correct.
-- [ ] T010 [P] [US1] Integration test `integration/S3StorageProbeTest.kt` (s3mock harness): probe against a
+- [X] T010 [P] [US1] Integration test `integration/S3StorageProbeTest.kt` (s3mock harness): probe against a
   live bucket ⇒ healthy; against an unreachable endpoint ⇒ not healthy (FR-008 parity).
-- [ ] T011 [US1] Add `observability/health/StorageHealthIndicator.kt` (Actuator `HealthIndicator`, bean id
+- [X] T011 [US1] Add `observability/health/StorageHealthIndicator.kt` (Actuator `HealthIndicator`, bean id
   `storage`): `UP` when `probe().healthy`, else `DOWN` with the non-secret detail; TTL-cached per
   `storageProbeTtl`. (Joins the readiness group via the T004 config.)
-- [ ] T012 [US1] Add `observability/health/UpstreamHealthIndicator.kt` (bean id `upstreams`): per-PROXY-repo
+- [X] T012 [US1] Add `observability/health/UpstreamHealthIndicator.kt` (bean id `upstreams`): per-PROXY-repo
   reachability (HEAD/short-timeout to `remoteUrl`, reusing the `UpstreamClient` HttpClient style),
   `UP` when all reachable else custom `DEGRADED`; TTL-cached per `upstreamHealthTtl`; detail is
   `{repo: {reachable}}` only — no `remoteUsername`/`remotePassword`. Not a member of liveness/readiness.
-- [ ] T013 [US1] Integration test `integration/ProbesTest.kt`: liveness + readiness return UP/200 with no
+- [X] T013 [US1] Integration test `integration/ProbesTest.kt`: liveness + readiness return UP/200 with no
   credentials; pointing storage at a broken root makes readiness `DOWN`/503 while liveness stays UP;
   restoring storage recovers readiness to 200 (FR-002, SC-001); assert the detailed `/actuator/health`
   output contains none of the *actual configured* secrets — the S3 `accessKey`/`secretKey` and any proxy
   `remoteUsername`/`remotePassword` — not merely arbitrary strings (FR-009).
-- [ ] T014 [US1] Integration test `integration/UpstreamHealthTest.kt` (StubUpstream stopped/failing): the
+- [X] T014 [US1] Integration test `integration/UpstreamHealthTest.kt` (StubUpstream stopped/failing): the
   detailed `/actuator/health` reports `upstreams` DEGRADED and overall DEGRADED at HTTP 200, while
   `/actuator/health/readiness` and `/liveness` stay UP/200 (FR-003, SC-005).
 
@@ -88,22 +88,22 @@ cache hit/miss + upstream outcomes, cleanup outcomes, and storage usage.
 **Independent test**: Drive publishes, resolves, a proxy miss-then-hit, and a cleanup run, then scrape
 `/actuator/prometheus` and confirm the corresponding counters/timers/gauges are present and increasing.
 
-- [ ] T015 [US2] Add `observability/metrics/RepositoryMetrics.kt` (wraps `MeterRegistry`) with
+- [X] T015 [US2] Add `observability/metrics/RepositoryMetrics.kt` (wraps `MeterRegistry`) with
   `recordPublish(repo, outcome)`, `recordResolve(repo, outcome)`, `recordCache(repo, result)`,
   `recordUpstream(repo, outcome)` → counters `relikquary.publish`/`resolve`/`proxy.cache`/`proxy.upstream`.
-- [ ] T016 [US2] Inject `RepositoryMetrics` into `protocol/RepositoryController.kt`; record publish outcome
+- [X] T016 [US2] Inject `RepositoryMetrics` into `protocol/RepositoryController.kt`; record publish outcome
   (accepted/rejected) in `publish` and resolve outcome (hit/miss/upstream_error) in `resolve`.
-- [ ] T017 [US2] Inject `RepositoryMetrics` into `repository/RepositoryResolver.kt`; in `proxy` record the
+- [X] T017 [US2] Inject `RepositoryMetrics` into `repository/RepositoryResolver.kt`; in `proxy` record the
   cache `hit`/`miss` and the upstream `found`/`not_found`/`error` outcome at the existing seam.
-- [ ] T018 [US2] Add `observability/metrics/CleanupMetricsRecorder.kt` and invoke it at the end of
+- [X] T018 [US2] Add `observability/metrics/CleanupMetricsRecorder.kt` and invoke it at the end of
   `cleanup/CleanupService.kt` `run(dryRun)` with the `CleanupReport`: increment
   `relikquary.cleanup.items.removed`, `relikquary.cleanup.bytes.reclaimed`, and
   `relikquary.cleanup.runs{dry_run}`.
-- [ ] T019 [US2] Add `observability/metrics/StorageUsageMetrics.kt` (Micrometer `MeterBinder`) registering
+- [X] T019 [US2] Add `observability/metrics/StorageUsageMetrics.kt` (Micrometer `MeterBinder`) registering
   `relikquary.storage.usage.bytes{backend}` and `relikquary.storage.objects{backend}` gauges backed by a
   cached total from `storage.walk("")`, refreshed every `storageUsageRefresh` (lazy first read; never a
   per-scrape walk).
-- [ ] T020 [P] [US2] Integration test `integration/MetricsScrapeTest.kt`: publish to a hosted repo, resolve
+- [X] T020 [P] [US2] Integration test `integration/MetricsScrapeTest.kt`: publish to a hosted repo, resolve
   it, drive a proxy cache miss then hit (StubUpstream), run `CleanupService.run`, then GET
   `/actuator/prometheus` (as publisher) and assert `http_server_requests_*`, `relikquary_publish_total`,
   `relikquary_resolve_total`, `relikquary_proxy_cache_total{result="hit"|"miss"}`,
@@ -123,19 +123,19 @@ principal), opt-in and off by default.
 documented fields; an authenticated request includes the principal, an anonymous one omits it; with the
 flag off, no such line is emitted.
 
-- [ ] T021 [US3] Add `observability/logging/RequestLogEvent.kt` (the record: `method`, `repository?`,
+- [X] T021 [US3] Add `observability/logging/RequestLogEvent.kt` (the record: `method`, `repository?`,
   `path`, `status`, `bytes`, `durationMs`, `principal?`) and
   `observability/logging/CountingResponseWrapper.kt` (counts bytes written via the output stream/writer
   without buffering the body; falls back to `Content-Length`).
-- [ ] T022 [US3] Add `observability/logging/RequestLoggingFilter.kt` (`OncePerRequestFilter`,
+- [X] T022 [US3] Add `observability/logging/RequestLoggingFilter.kt` (`OncePerRequestFilter`,
   `@ConditionalOnProperty("relikquary.observability.request-log.enabled")`): times the chain, derives the
   repository from the first decoded path segment (excluding `actuator`/`api`/`ui`), reads the principal
   from `SecurityContextHolder` (omitted when anonymous), and logs one Jackson-serialized JSON line on the
   `relikquary.access` logger at INFO.
-- [ ] T023 [P] [US3] Unit test `unit/RequestLogEventTest.kt`: field extraction + repository parsing
+- [X] T023 [P] [US3] Unit test `unit/RequestLogEventTest.kt`: field extraction + repository parsing
   (repo path vs `/actuator` vs `/api`), principal present vs absent, and the serialized JSON is a single
   line with exactly the documented keys.
-- [ ] T024 [US3] Integration test `integration/RequestLogTest.kt` (attach a Logback `ListAppender` to the
+- [X] T024 [US3] Integration test `integration/RequestLogTest.kt` (attach a Logback `ListAppender` to the
   `relikquary.access` logger): with the flag on, a resolve emits exactly one JSON line carrying method/
   repository/path/status/bytes/duration; an authenticated publish includes `principal`, an anonymous
   request omits it; with the flag off (default) no line is emitted (FR-005, SC-003). Include a case where
@@ -146,10 +146,10 @@ flag off, no such line is emitted.
 
 ## Phase 6: Polish & verify
 
-- [ ] T025 [P] Document the observability surface in `backend/src/main/resources/application.yml` comments
+- [X] T025 [P] Document the observability surface in `backend/src/main/resources/application.yml` comments
   and add an Observability section to `README.md`: liveness/readiness probes, the Prometheus scrape and
   the metric catalog, the opt-in request log, and the operator-gating model (probes open, rest `PUBLISH`).
-- [ ] T026 `./gradlew build` green — detekt zero (suppress intentional probe `SwallowedException` where
+- [X] T026 `./gradlew build` green — detekt zero (suppress intentional probe `SwallowedException` where
   needed; lines ≤140), Kover holds, all new unit/integration tests pass, and the existing publish/resolve
   real-client round-trips are unchanged (SC-006); `verification-metadata.xml` reflects only the two new
   deps. Commit & push to `claude/spec-010-observability`.
