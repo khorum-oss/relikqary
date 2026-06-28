@@ -7,10 +7,14 @@ import org.khorum.oss.relikquary.coordinate.InvalidRepositoryPathException
 import org.khorum.oss.relikquary.coordinate.RepositoryPath
 import org.khorum.oss.relikquary.ingestion.PublishDecision
 import org.khorum.oss.relikquary.ingestion.RepublishPolicy
+import org.khorum.oss.relikquary.repository.RepositoryKind
 import org.khorum.oss.relikquary.repository.RepositoryNotFoundException
 import org.khorum.oss.relikquary.repository.RepositoryRegistry
+import org.khorum.oss.relikquary.repository.RepositoryResolver
+import org.khorum.oss.relikquary.repository.Resolution
 import org.khorum.oss.relikquary.storage.ArtifactStorage
 import org.springframework.core.io.InputStreamResource
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -35,11 +39,17 @@ class RepositoryController(
     private val storage: ArtifactStorage,
     private val republishPolicy: RepublishPolicy,
     private val registry: RepositoryRegistry,
+    private val resolver: RepositoryResolver,
 ) {
 
     @PutMapping("/**")
     fun publish(request: HttpServletRequest): ResponseEntity<Void> {
         val target = target(request)
+        if (target.repo.kind != RepositoryKind.HOSTED) {
+            logger.info { "Rejecting publish to read-only ${target.repo.kind} repo '${target.repo.name}'" }
+            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .header(HttpHeaders.ALLOW, "GET", "HEAD").build()
+        }
         val exists = storage.exists(target.key)
         return when (republishPolicy.evaluate(target.repo.type, target.path, exists)) {
             PublishDecision.REJECT_TYPE -> {
@@ -61,12 +71,14 @@ class RepositoryController(
     @GetMapping("/**")
     fun resolve(request: HttpServletRequest): ResponseEntity<InputStreamResource> {
         val target = target(request)
-        val stored = storage.openRead(target.key)
-            ?: return ResponseEntity.notFound().build()
-        return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-            .contentLength(stored.sizeBytes)
-            .body(InputStreamResource(stored.stream))
+        return when (val resolution = resolver.resolve(target.repo.name, target.path)) {
+            is Resolution.Hit -> ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(resolution.artifact.sizeBytes)
+                .body(InputStreamResource(resolution.artifact.stream))
+            Resolution.Miss -> ResponseEntity.notFound().build()
+            Resolution.UpstreamError -> ResponseEntity.status(HttpStatus.BAD_GATEWAY).build()
+        }
     }
 
     private data class Target(val repo: RepositoryProperties.Repo, val path: RepositoryPath) {

@@ -101,6 +101,44 @@ at the root. The defaults are `releases` (immutable) and `snapshots` (overwritab
 
 Define repositories under `relikquary.repositories` (`{name, type}`); an unknown repo name returns 404.
 
+### Proxy & group repositories
+
+Beyond locally **hosted** repos, a repository's `kind` can make it a **proxy** or a **group** (both
+read-only — publishing returns 405):
+
+- **`proxy`** transparently fetches from an upstream (`remoteUrl`) on a cache miss, stores the bytes
+  byte-for-byte, and serves later requests from the local cache without contacting the upstream.
+  `maven-metadata.xml` is always served fresh from the upstream (never cached), so newly published
+  upstream versions stay resolvable. Optional `remoteUsername`/`remotePassword` (for authenticated
+  upstreams) come from the environment — never commit them.
+- **`group`** aggregates ordered `members` (hosted or proxy) behind one URL and returns the first
+  member that has the artifact.
+
+The defaults ship a `maven-central` proxy (→ `https://repo1.maven.org/maven2`) and a `public` group
+over `[releases, maven-central]`, so a build can point at a single URL for both first-party artifacts
+and proxied Central dependencies:
+
+```yaml
+relikquary:
+  repositories:
+    - name: releases
+      type: release
+    - name: maven-central
+      kind: proxy
+      remoteUrl: https://repo1.maven.org/maven2
+    - name: public
+      kind: group
+      members: [releases, maven-central]
+```
+
+```kotlin
+// settings.gradle.kts / build.gradle.kts on a consuming build
+repositories { maven { url = uri("http://localhost:8080/public") } }
+```
+
+A proxy or group request for something present nowhere returns 404; an upstream outage on a cache miss
+returns 502.
+
 ### Object storage (S3 / DigitalOcean Spaces)
 
 Set `relikquary.storage.backend=s3` and point it at any S3-compatible endpoint (AWS S3, DigitalOcean
@@ -117,6 +155,12 @@ RELIKQUARY_S3_ACCESS_KEY=... RELIKQUARY_S3_SECRET_KEY=... \
 
 | Property | Default | Description |
 |----------|---------|-------------|
+| `relikquary.repositories[].name` | _(none)_ | Repository name = path prefix (`/{name}/…`) |
+| `relikquary.repositories[].kind` | `hosted` | `hosted`, `proxy`, or `group` |
+| `relikquary.repositories[].type` | `mixed` | Hosted acceptance/mutability: `release`, `snapshot`, or `mixed` |
+| `relikquary.repositories[].remoteUrl` | _(none)_ | Proxy upstream base URL (required for `proxy`) |
+| `relikquary.repositories[].remoteUsername` / `remotePassword` | _(none)_ | Optional upstream credentials (supply via env) |
+| `relikquary.repositories[].members` | _(empty)_ | Ordered member repo names (required for `group`) |
 | `relikquary.storage.backend` | `filesystem` | `filesystem` or `s3` (S3-compatible object storage) |
 | `relikquary.storage.filesystem.root` | `./relikquary-store` | Directory where artifacts are persisted (filesystem backend) |
 | `relikquary.storage.s3.endpoint` | _(none)_ | S3 endpoint override (e.g. DigitalOcean Spaces / MinIO) |

@@ -74,6 +74,14 @@ class BrowseApiTest {
     }
 
     @Test
+    fun `repositories list reports each kind`() {
+        val byName = json.readTree(get("/api/repositories").body()).associateBy { it["name"].asText() }
+        assertEquals("HOSTED", byName["releases"]!!["kind"].asText())
+        assertEquals("PROXY", byName["maven-central"]!!["kind"].asText())
+        assertEquals("GROUP", byName["public"]!!["kind"].asText())
+    }
+
+    @Test
     fun `browses contents down to files`() {
         seed("1.0.0")
         val folders = json.readTree(get("/api/repositories/releases/contents/com/example/widget").body())["entries"]

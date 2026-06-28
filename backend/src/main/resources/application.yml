@@ -1,11 +1,26 @@
 relikquary:
-  # Named, typed repositories, each addressed by a path prefix (/{repo}/...). There is no implicit
-  # repository at the root. Types: release (immutable), snapshot (overwritable), mixed (both).
+  # Named repositories, each addressed by a path prefix (/{repo}/...). There is no implicit
+  # repository at the root. A repository's kind selects how it resolves:
+  #   - hosted (default): stores artifacts locally; 'type' governs acceptance/mutability —
+  #       release (immutable), snapshot (overwritable), mixed (both).
+  #   - proxy: read-only; fetches from 'remoteUrl' on a cache miss and caches the bytes locally.
+  #       maven-metadata.xml is always served fresh from upstream (never cached). Optional upstream
+  #       credentials (remoteUsername/remotePassword) come from env — never commit them.
+  #   - group: read-only; resolves 'members' in order and returns the first match.
+  # Proxy and group repos reject publishing (405).
   repositories:
     - name: releases
       type: release
     - name: snapshots
       type: snapshot
+    - name: maven-central
+      kind: proxy
+      remoteUrl: ${RELIKQUARY_MAVEN_CENTRAL_URL:https://repo1.maven.org/maven2}
+      # remoteUsername: ${RELIKQUARY_MAVEN_CENTRAL_USER:}
+      # remotePassword: ${RELIKQUARY_MAVEN_CENTRAL_PASSWORD:}
+    - name: public
+      kind: group
+      members: [releases, maven-central]
   storage:
     # Storage backend: 'filesystem' (default) or 's3' (S3-compatible: AWS, DigitalOcean Spaces, MinIO).
     backend: filesystem
