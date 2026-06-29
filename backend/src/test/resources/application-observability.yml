@@ -1,0 +1,25 @@
+# Topology for the feature 010 observability integration tests (@ActiveProfiles("observability")).
+# Security is off (probes + management open, local-dev parity); the proxy points at a per-test
+# StubUpstream via the RELIKQUARY_MAVEN_CENTRAL_URL placeholder; storage root is supplied per-test via
+# @DynamicPropertySource. The deliberately-set credentials below are leak-check sentinels: the FR-009
+# assertions verify these exact values never appear in any health or metrics output.
+relikquary:
+  security:
+    enabled: false
+  observability:
+    # No probe caching, so storage-down / upstream-down transitions are observed immediately in tests.
+    storage-probe-ttl: PT0S
+    upstream-health-ttl: PT0S
+  storage:
+    s3:
+      access-key: AKIA-LEAKCHECK-ACCESS
+      secret-key: S3-LEAKCHECK-SECRET
+  repositories:
+    - name: releases
+      kind: hosted
+      type: mixed
+    - name: maven-central
+      kind: proxy
+      remoteUrl: ${RELIKQUARY_MAVEN_CENTRAL_URL}
+      remoteUsername: upstream-leakcheck-user
+      remotePassword: upstream-leakcheck-pass

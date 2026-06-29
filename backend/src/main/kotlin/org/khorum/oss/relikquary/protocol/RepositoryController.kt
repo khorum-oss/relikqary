@@ -7,6 +7,7 @@ import org.khorum.oss.relikquary.coordinate.InvalidRepositoryPathException
 import org.khorum.oss.relikquary.coordinate.RepositoryPath
 import org.khorum.oss.relikquary.ingestion.PublishDecision
 import org.khorum.oss.relikquary.ingestion.RepublishPolicy
+import org.khorum.oss.relikquary.observability.metrics.RepositoryMetrics
 import org.khorum.oss.relikquary.repository.RepositoryKind
 import org.khorum.oss.relikquary.repository.RepositoryNotFoundException
 import org.khorum.oss.relikquary.repository.RepositoryRegistry
@@ -40,6 +41,7 @@ class RepositoryController(
     private val republishPolicy: RepublishPolicy,
     private val registry: RepositoryRegistry,
     private val resolver: RepositoryResolver,
+    private val metrics: RepositoryMetrics,
 ) {
 
     @PutMapping("/**")
@@ -47,6 +49,7 @@ class RepositoryController(
         val target = target(request)
         if (target.repo.kind != RepositoryKind.HOSTED) {
             logger.info { "Rejecting publish to read-only ${target.repo.kind} repo '${target.repo.name}'" }
+            metrics.recordPublish(target.repo.name, "rejected")
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .header(HttpHeaders.ALLOW, "GET", "HEAD").build()
         }
@@ -54,15 +57,18 @@ class RepositoryController(
         return when (republishPolicy.evaluate(target.repo.type, target.path, exists)) {
             PublishDecision.REJECT_TYPE -> {
                 logger.info { "Rejecting ${target.path.key}: wrong coordinate kind for ${target.repo.type} repo '${target.repo.name}'" }
+                metrics.recordPublish(target.repo.name, "rejected")
                 ResponseEntity.badRequest().build()
             }
             PublishDecision.REJECT_IMMUTABLE -> {
                 logger.info { "Rejecting re-publish of immutable release: ${target.key}" }
+                metrics.recordPublish(target.repo.name, "rejected")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
             PublishDecision.ACCEPT -> {
                 val written = storage.write(target.key, request.inputStream)
                 logger.info { "Stored ${target.key} ($written bytes)" }
+                metrics.recordPublish(target.repo.name, "accepted")
                 ResponseEntity.status(if (exists) HttpStatus.OK else HttpStatus.CREATED).build()
             }
         }
@@ -72,12 +78,21 @@ class RepositoryController(
     fun resolve(request: HttpServletRequest): ResponseEntity<InputStreamResource> {
         val target = target(request)
         return when (val resolution = resolver.resolve(target.repo.name, target.path)) {
-            is Resolution.Hit -> ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .contentLength(resolution.artifact.sizeBytes)
-                .body(InputStreamResource(resolution.artifact.stream))
-            Resolution.Miss -> ResponseEntity.notFound().build()
-            Resolution.UpstreamError -> ResponseEntity.status(HttpStatus.BAD_GATEWAY).build()
+            is Resolution.Hit -> {
+                metrics.recordResolve(target.repo.name, "hit")
+                ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(resolution.artifact.sizeBytes)
+                    .body(InputStreamResource(resolution.artifact.stream))
+            }
+            Resolution.Miss -> {
+                metrics.recordResolve(target.repo.name, "miss")
+                ResponseEntity.notFound().build()
+            }
+            Resolution.UpstreamError -> {
+                metrics.recordResolve(target.repo.name, "upstream_error")
+                ResponseEntity.status(HttpStatus.BAD_GATEWAY).build()
+            }
         }
     }
 

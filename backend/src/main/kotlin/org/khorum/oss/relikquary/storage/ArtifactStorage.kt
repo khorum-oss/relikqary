@@ -33,7 +33,20 @@ interface ArtifactStorage {
      * last-modified time. Used by retention/cleanup (feature 009); never returns directories.
      */
     fun walk(prefix: String): List<StoredObject>
+
+    /**
+     * Cheap, side-effect-free reachability/writability check backing the readiness probe (feature 010).
+     * Never writes, reads, or re-checksums stored artifacts, and never returns secrets.
+     */
+    fun probe(): StorageProbe
 }
+
+/** Result of a storage reachability/writability check (feature 010 readiness probe). [detail] is never a secret. */
+data class StorageProbe(
+    val healthy: Boolean,
+    val backend: String,
+    val detail: String? = null,
+)
 
 /** A stored file's full key, size, and last-modified time (feature 009 cleanup enumeration). */
 data class StoredObject(

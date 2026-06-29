@@ -33,6 +33,8 @@ dependencies {
 
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.security)
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.micrometer.registry.prometheus)
     implementation(libs.aws.s3)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.reflect)

@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.khorum.oss.relikquary.config.RepositoryProperties
 import org.khorum.oss.relikquary.config.RepositoryProperties.CacheEviction
 import org.khorum.oss.relikquary.config.RepositoryProperties.SnapshotRetention
+import org.khorum.oss.relikquary.observability.metrics.CleanupMetricsRecorder
 import org.khorum.oss.relikquary.protocol.dto.CleanupReport
 import org.khorum.oss.relikquary.protocol.dto.RepoCleanupResult
 import org.khorum.oss.relikquary.repository.RepositoryKind
@@ -29,17 +30,20 @@ private val logger = KotlinLogging.logger {}
 class CleanupService(
     private val registry: RepositoryRegistry,
     private val storage: ArtifactStorage,
+    private val metrics: CleanupMetricsRecorder,
 ) {
 
     fun run(dryRun: Boolean): CleanupReport {
         val now = Instant.now()
         val results = registry.all().mapNotNull { repo -> cleanRepo(repo, now, dryRun) }
-        return CleanupReport(
+        val report = CleanupReport(
             dryRun = dryRun,
             itemsRemoved = results.sumOf { it.itemsRemoved },
             bytesReclaimed = results.sumOf { it.bytesReclaimed },
             repositories = results,
         )
+        metrics.record(report)
+        return report
     }
 
     private fun cleanRepo(repo: RepositoryProperties.Repo, now: Instant, dryRun: Boolean): RepoCleanupResult? {

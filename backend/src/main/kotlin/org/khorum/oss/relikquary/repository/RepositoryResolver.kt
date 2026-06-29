@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.khorum.oss.relikquary.config.RepositoryProperties
 import org.khorum.oss.relikquary.coordinate.PathKind
 import org.khorum.oss.relikquary.coordinate.RepositoryPath
+import org.khorum.oss.relikquary.observability.metrics.RepositoryMetrics
 import org.khorum.oss.relikquary.proxy.UpstreamClient
 import org.khorum.oss.relikquary.proxy.UpstreamResponse
 import org.khorum.oss.relikquary.security.Action
@@ -39,6 +40,7 @@ class RepositoryResolver(
     private val storage: ArtifactStorage,
     private val upstream: UpstreamClient,
     private val authorizer: RepositoryAuthorizer,
+    private val metrics: RepositoryMetrics,
 ) {
 
     fun resolve(repoName: String, path: RepositoryPath): Resolution {
@@ -56,15 +58,26 @@ class RepositoryResolver(
     private fun proxy(repo: RepositoryProperties.Repo, path: RepositoryPath): Resolution {
         if (path.classify() == PathKind.METADATA) return passThrough(repo, path)
         val cacheKey = "${repo.name}/${path.key}"
-        storage.openRead(cacheKey)?.let { return Resolution.Hit(it) }
+        storage.openRead(cacheKey)?.let {
+            metrics.recordCache(repo.name, "hit")
+            return Resolution.Hit(it)
+        }
+        metrics.recordCache(repo.name, "miss")
         return when (val response = upstream.fetch(repo, path.key)) {
             is UpstreamResponse.Found -> {
+                metrics.recordUpstream(repo.name, "found")
                 storage.write(cacheKey, response.stream)
                 logger.info { "Cached ${repo.name}/${path.key} from upstream" }
                 storage.openRead(cacheKey)?.let { Resolution.Hit(it) } ?: Resolution.Miss
             }
-            UpstreamResponse.NotFound -> Resolution.Miss
-            UpstreamResponse.Error -> Resolution.UpstreamError
+            UpstreamResponse.NotFound -> {
+                metrics.recordUpstream(repo.name, "not_found")
+                Resolution.Miss
+            }
+            UpstreamResponse.Error -> {
+                metrics.recordUpstream(repo.name, "error")
+                Resolution.UpstreamError
+            }
         }
     }
 

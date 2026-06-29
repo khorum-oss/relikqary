@@ -8,7 +8,9 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.Delete
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest
+import software.amazon.awssdk.core.exception.SdkException
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
@@ -108,6 +110,17 @@ class S3ArtifactStorage(
         }
         return keys.size
     }
+
+    // A failed headBucket (unreachable endpoint, bad credentials, missing bucket) is the "not healthy"
+    // signal — swallowed deliberately and reported without exposing the endpoint/bucket or credentials.
+    @Suppress("SwallowedException")
+    override fun probe(): StorageProbe =
+        try {
+            s3.headBucket(HeadBucketRequest.builder().bucket(bucket).build())
+            StorageProbe(healthy = true, backend = "s3")
+        } catch (e: SdkException) {
+            StorageProbe(healthy = false, backend = "s3", detail = "bucket is not reachable")
+        }
 
     private fun normalizeFolder(prefix: String): String =
         if (prefix.isEmpty() || prefix.endsWith("/")) prefix else "$prefix/"
