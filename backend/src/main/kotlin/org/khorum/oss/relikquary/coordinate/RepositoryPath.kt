@@ -22,6 +22,22 @@ value class RepositoryPath private constructor(val key: String) {
     private val parentSegment: String
         get() = key.substringBeforeLast('/', missingDelimiterValue = "").substringAfterLast('/')
 
+    /** The version directory segment (the segment immediately containing the file). */
+    val version: String get() = parentSegment
+
+    /** The artifact id: the path segment immediately above the version directory. */
+    val artifactId: String
+        get() = key.substringBeforeLast('/', "").substringBeforeLast('/', "").substringAfterLast('/')
+
+    /**
+     * Whether this path is Gradle Module Metadata for its coordinate (feature 011): the file name ends
+     * with `.module` AND starts with `"{artifactId}-"` (so `widget-1.2.3.module` and a timestamped
+     * snapshot `widget-1.0-…-1.module` match, but an unrelated `other-1.0.module` does not). The
+     * `.module` extension alone is not sufficient.
+     */
+    fun isModuleMetadata(): Boolean =
+        fileName.endsWith(MODULE_SUFFIX) && artifactId.isNotEmpty() && fileName.startsWith("$artifactId-")
+
     /**
      * Classify for re-publish decisions: artifact-level metadata is always overwritable, SNAPSHOT
      * versions are overwritable, and everything else is treated as a RELEASE coordinate file.
@@ -35,6 +51,7 @@ value class RepositoryPath private constructor(val key: String) {
     companion object {
         private const val METADATA_FILE = "maven-metadata.xml"
         private const val SNAPSHOT_SUFFIX = "-SNAPSHOT"
+        private const val MODULE_SUFFIX = ".module"
 
         fun of(rawPath: String): RepositoryPath {
             val trimmed = rawPath.trimStart('/')

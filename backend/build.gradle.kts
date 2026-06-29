@@ -56,6 +56,7 @@ detekt {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
     // Real-client round-trip tests drive the repo's Gradle wrapper and the system Maven via
     // external processes (keeping gradle-api/maven libs off the test classpath).
     systemProperty("relikquary.rootProjectDir", rootProject.layout.projectDirectory.asFile.absolutePath)
