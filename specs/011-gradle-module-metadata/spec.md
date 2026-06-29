@@ -16,6 +16,20 @@ attributes/capabilities, dependencies, and files). Maven contract and existing p
 unchanged; both storage backends behave identically. Out of scope: generating/rewriting module metadata,
 server-side variant selection, validating `.module` against the jar."
 
+## Clarifications
+
+### Session 2026-06-29
+
+- Q: Where is the Gradle Module Metadata parsed for the UI's variant detail view? → A: The **backend**
+  parses the `.module` and exposes a structured response (variants, attributes/capabilities, dependencies,
+  files) through the browse API; the frontend renders it. The stored `.module` bytes are never altered.
+- Q: How is a `.module` recognized as Gradle Module Metadata? → A: By the `.module` extension **and** a
+  filename that matches the coordinate (`{artifact}-{version}.module`) in that version directory — not any
+  arbitrary `.module` file.
+- Q: What form should the copy-paste consume snippets take? → A: **Both** Gradle DSLs (Kotlin and Groovy)
+  **and** Maven XML — a Kotlin-DSL snippet, a Groovy-DSL snippet, and a Maven `<dependency>`/`<repository>`
+  snippet, each pointing at this repository's URL.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Publish & resolve Gradle modules faithfully on a hosted repo (Priority: P1)
@@ -125,8 +139,9 @@ attributes/capabilities, dependencies, and files.
 - **FR-001**: The system MUST accept and store Gradle Module Metadata (`.module`) files and their
   checksum/signature sidecars byte-for-byte on publish, exactly as it does for jar/POM files.
 - **FR-002**: The system MUST recognize a `.module` file as a distinct Gradle module-metadata artifact
-  kind (so publish acceptance, proxy caching, and the browse UI can treat it appropriately), without
-  changing how any existing file type is handled.
+  kind when its name matches the coordinate (`{artifact}-{version}.module`) in that version directory (the
+  `.module` extension alone is not sufficient), so publish acceptance, proxy caching, and the browse UI
+  treat it appropriately, without changing how any existing file type is handled.
 - **FR-003**: Publish acceptance for a `.module` MUST follow the same release/snapshot rules as the
   coordinate's other files: immutable for a release version (re-publish rejected), overwritable for a
   snapshot version.
@@ -141,11 +156,14 @@ attributes/capabilities, dependencies, and files.
   to `.module` files as to any other file.
 - **FR-007**: The browse UI MUST visibly mark a coordinate that has a `.module` as a Gradle module,
   distinguishing it from coordinates that do not.
-- **FR-008**: The browse UI MUST present, for an artifact coordinate, copy-paste "consume" snippets for
-  both Gradle and Maven that include the coordinate and this repository's resolvable URL.
-- **FR-009**: For a Gradle module, the browse UI MUST present a detail view derived from the module
-  metadata showing the module's variants and, per variant, its attributes/capabilities, dependencies, and
-  the files it produces; malformed metadata MUST degrade gracefully without breaking browsing.
+- **FR-008**: The browse UI MUST present, for an artifact coordinate, copy-paste "consume" snippets in
+  three forms — Gradle Kotlin DSL, Gradle Groovy DSL, and Maven XML — each naming the coordinate and this
+  repository's resolvable URL.
+- **FR-009**: For a Gradle module, the backend MUST parse the `.module` and expose its variants and, per
+  variant, attributes/capabilities, dependencies, and produced files through the browse API as a
+  structured response; the browse UI MUST render that as a module detail view. Parsing MUST NOT alter the
+  stored bytes, and malformed metadata MUST degrade gracefully (the coordinate stays browsable and
+  downloadable) without breaking browsing.
 - **FR-010**: Gradle module handling (publish, resolve, proxy cache, and the UI module view) MUST behave
   consistently across the filesystem and S3 storage backends.
 - **FR-011**: The system MUST NOT generate, rewrite, re-checksum, or validate `.module` contents (e.g.
@@ -184,15 +202,17 @@ attributes/capabilities, dependencies, and files.
 
 ## Assumptions
 
-- **Module file naming**: Gradle Module Metadata follows Gradle's convention — a `module-version.module`
-  JSON file living in the same version directory as the POM/jar; recognition keys off the `.module`
-  extension. (To confirm precise recognition rules in `/speckit-clarify`.)
-- **Detail-view data source**: the variant/dependency/file information shown in the UI is derived from the
-  published `.module` JSON; whether the backend parses it into a structured response or the UI parses the
-  raw file is a design choice deferred to planning. The server never alters the stored bytes.
-- **Consume-snippet form**: snippets use common defaults — a Gradle dependency declaration (e.g. an
-  `implementation` dependency) plus a repository block, and a Maven `<dependency>` plus `<repository>` —
-  pointing at this repository's URL. (Exact DSL/dialect to confirm in `/speckit-clarify`.)
+- **Module file naming**: Gradle Module Metadata follows Gradle's convention — an
+  `{artifact}-{version}.module` JSON file in the same version directory as the POM/jar; recognition
+  requires the coordinate-matching filename, not merely the `.module` extension (resolved in
+  clarification).
+- **Detail-view data source**: the backend parses the published `.module` JSON and exposes the
+  variant/dependency/file information as a structured browse-API response; the frontend renders it. The
+  server never alters the stored bytes (resolved in clarification).
+- **Consume-snippet form**: the UI renders three snippets — Gradle Kotlin DSL (`implementation("g:a:v")` +
+  a `maven { url }` repository block), Gradle Groovy DSL (`implementation 'g:a:v'` + repository block), and
+  Maven `<dependency>` + `<repository>` — each pointing at this repository's URL (resolved in
+  clarification).
 - **Round-trip test fixtures**: the Gradle round-trip enables Gradle Module Metadata publication and uses
   a variant/capability that exercises module-metadata-driven selection, run with real Gradle clients
   (consistent with the constitution's real-round-trip requirement). Docker-gated paths follow existing

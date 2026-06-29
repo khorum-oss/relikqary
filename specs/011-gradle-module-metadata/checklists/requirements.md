@@ -26,8 +26,8 @@
 
 ## Notes
 
-- Ready for `/speckit-clarify`. Three decisions were defaulted and should be confirmed: (1) **`.module`
-  recognition rule** — by `.module` extension vs a stricter coordinate-aware match; (2) **module
-  detail-view data source** — backend parses the GMM into a structured response vs the frontend fetches
-  and parses the raw `.module`; (3) **consume-snippet form** — which Gradle DSL/dialect (Kotlin vs Groovy,
-  `implementation`) and Maven shape to render.
+- `/speckit-clarify` complete (Session 2026-06-29). Three decisions resolved: (1) **`.module` recognition**
+  → coordinate-matching filename (`{artifact}-{version}.module`), not the extension alone; (2) **module
+  detail-view data source** → the **backend parses** the GMM and exposes a structured browse-API response,
+  rendered by the frontend; (3) **consume-snippet form** → **Gradle Kotlin DSL + Gradle Groovy DSL + Maven
+  XML**. Ready for `/speckit-plan`.
