@@ -31,10 +31,16 @@ jobs:
           # orphaned protocol.RequestLoggingFilter class (a since-moved source) onto the classpath, failing
           # RequestLogTest with a duplicate-bean conflict. Compile from a clean Gradle home each run.
           cache-disabled: true
+      - name: Diagnose checked-out source (pre-build)
+        run: |
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "=== git status (untracked/dirty?) ==="; git status --short || true
+          echo "=== source files matching RequestLoggingFilter (on disk) ==="
+          find backend/src -name '*RequestLoggingFilter*' 2>/dev/null || true
+          echo "=== protocol package dir on disk ==="; ls -la backend/src/main/kotlin/org/khorum/oss/relikquary/protocol/ || true
+          echo "=== package decl of the observability filter ==="; head -1 backend/src/main/kotlin/org/khorum/oss/relikquary/observability/logging/RequestLoggingFilter.kt || true
+          echo "=== git-tracked sources matching RequestLoggingFilter ==="; git ls-files | grep -i RequestLoggingFilter || true
       - name: Build (compile, detekt, tests, coverage, dependency verification)
-        # --no-build-cache: compile from the clean checkout rather than restoring a (possibly stale)
-        # cached compile output, so no orphaned class from a since-moved source file lands on the
-        # classpath (a stale build-cache entry once caused a duplicate-bean ConflictingBeanDefinition).
         run: ./gradlew :backend:build --no-daemon --stacktrace --no-build-cache
       - name: Diagnose duplicate RequestLoggingFilter on the classpath
         if: always()
