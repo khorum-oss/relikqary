@@ -161,9 +161,10 @@ read-only — publishing returns 405):
 - **`group`** aggregates ordered `members` (hosted or proxy) behind one URL and returns the first
   member that has the artifact.
 
-The defaults ship a `maven-central` proxy (→ `https://repo1.maven.org/maven2`) and a `public` group
-over `[releases, maven-central]`, so a build can point at a single URL for both first-party artifacts
-and proxied Central dependencies:
+The defaults ship a `maven-central` proxy (→ `https://repo1.maven.org/maven2`), a `gradle-plugins`
+proxy for the **Gradle Plugin Portal** (→ `https://plugins.gradle.org/m2/`), and a `public` group over
+`[releases, maven-central, gradle-plugins]`, so a build can point at a single URL for first-party
+artifacts, proxied Central dependencies, **and Gradle plugins**:
 
 ```yaml
 relikquary:
@@ -173,15 +174,32 @@ relikquary:
     - name: maven-central
       kind: proxy
       remoteUrl: https://repo1.maven.org/maven2
+    - name: gradle-plugins
+      kind: proxy
+      remoteUrl: https://plugins.gradle.org/m2/   # override with RELIKQUARY_GRADLE_PLUGIN_PORTAL_URL
     - name: public
       kind: group
-      members: [releases, maven-central]
+      members: [releases, maven-central, gradle-plugins]   # portal consulted last
 ```
 
+A consuming Gradle build resolves both its dependencies and its plugins through the one `public` URL.
+Plugin resolution is wired in `settings.gradle.kts` (evaluated before build scripts); declaring
+`pluginManagement.repositories` explicitly replaces the default `gradlePluginPortal()`, so plugins
+flow through Relikquary:
+
 ```kotlin
-// settings.gradle.kts / build.gradle.kts on a consuming build
-repositories { maven { url = uri("http://localhost:8080/public") } }
+// settings.gradle.kts on a consuming build
+pluginManagement {
+    repositories { maven { url = uri("http://localhost:8080/public") } }
+}
+dependencyResolutionManagement {
+    repositories { maven { url = uri("http://localhost:8080/public") } }
+}
 ```
+
+The `gradle-plugins` proxy is also addressable on its own at `/gradle-plugins`. Plugin marker POMs
+(`{id}:{id}.gradle.plugin`) and implementation artifacts are cached byte-for-byte like any proxied
+artifact, so a plugin resolved once keeps working even when the portal is unreachable.
 
 A proxy or group request for something present nowhere returns 404; an upstream outage on a cache miss
 returns 502.

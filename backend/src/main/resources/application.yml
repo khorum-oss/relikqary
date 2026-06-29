@@ -29,9 +29,18 @@ relikquary:
       remoteUrl: ${RELIKQUARY_MAVEN_CENTRAL_URL:https://repo1.maven.org/maven2}
       # remoteUsername: ${RELIKQUARY_MAVEN_CENTRAL_USER:}
       # remotePassword: ${RELIKQUARY_MAVEN_CENTRAL_PASSWORD:}
+    - name: gradle-plugins
+      kind: proxy
+      # The Gradle Plugin Portal, served as a Maven-layout repository. A Gradle build whose
+      # pluginManagement repositories point at this server's 'public' group resolves plugin marker
+      # POMs ({id}:{id}.gradle.plugin) and implementations through here, cached like any proxy.
+      remoteUrl: ${RELIKQUARY_GRADLE_PLUGIN_PORTAL_URL:https://plugins.gradle.org/m2/}
     - name: public
       kind: group
-      members: [releases, maven-central]
+      # Aggregate endpoint a build can point at for everything: local releases first, then Maven
+      # Central, then the Gradle Plugin Portal (consulted last, so ordinary dependency misses don't
+      # incur a portal round-trip). First match wins.
+      members: [releases, maven-central, gradle-plugins]
   storage:
     # Storage backend: 'filesystem' (default) or 's3' (S3-compatible: AWS, DigitalOcean Spaces, MinIO).
     backend: filesystem
