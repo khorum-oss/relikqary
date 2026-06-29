@@ -11,17 +11,17 @@ Gradle round trips). Backend paths under `backend/src/.../org/khorum/oss/relikqu
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm no new dependencies are needed (Jackson `jackson-module-kotlin` is already on the
+- [X] T001 Confirm no new dependencies are needed (Jackson `jackson-module-kotlin` is already on the
   classpath for GMM parsing) and create the backend `gradle/` package directory
   (`backend/src/main/kotlin/org/khorum/oss/relikquary/gradle/`).
 
 ## Phase 2: Foundational (blocking prerequisites for all stories)
 
-- [ ] T002 Add coordinate accessors and recognition to `coordinate/RepositoryPath.kt`: `artifactId` (the
+- [X] T002 Add coordinate accessors and recognition to `coordinate/RepositoryPath.kt`: `artifactId` (the
   segment above the version directory), `version` (the version-directory segment), and
   `isModuleMetadata()` (file name ends with `.module` AND starts with `"{artifactId}-"`). Leave
   `classify()` unchanged so the existing release-immutable / snapshot-overwritable behaviour is preserved.
-- [ ] T003 [P] Unit test `unit/RepositoryPathModuleTest.kt`: `isModuleMetadata()` true for a release
+- [X] T003 [P] Unit test `unit/RepositoryPathModuleTest.kt`: `isModuleMetadata()` true for a release
   `widget-1.2.3.module` and a timestamped snapshot `widget-1.0-…-1.module`; false for a non-matching
   `other-1.0.module`, a `maven-metadata.xml`, and a `.jar`/`.pom`; assert `classify()` still returns
   `RELEASE` for a release `.module` and `SNAPSHOT` for a snapshot `.module` (locks the immutability inputs).
@@ -37,14 +37,14 @@ round-trips through a hosted repo and resolves in a separate real Gradle build v
 **Independent test**: Publish a feature-variant library to a hosted repo; a consumer that requires the
 capability resolves it (only possible via the `.module`); resolved files are byte-for-byte identical.
 
-- [ ] T004 [US1] Real Gradle round-trip `integration/GradleModuleRoundTripTest.kt` (external-process Gradle
+- [X] T004 [US1] Real Gradle round-trip `integration/GradleModuleRoundTripTest.kt` (external-process Gradle
   harness, mirroring `PublishResolveRoundTripTest`): a publisher `java-library` that registers a feature
   with a capability (`java { registerFeature("extra") { usingSourceSet(sourceSets["main"]) } }`) publishes
   to a hosted `releases` repo (producing `.module`, POM, jars + sidecars); a separate consumer build
   depends on the coordinate `requireCapability("{group}:{artifact}-extra")` and resolves it; assert the
   resolved artifact is byte-for-byte identical to the published bytes (resolution is only possible via the
   `.module`, proving GMM fidelity — FR-004, SC-001).
-- [ ] T005 [US1] Integration test `integration/ModuleImmutabilityTest.kt` (`@SpringBootTest(RANDOM_PORT)` +
+- [X] T005 [US1] Integration test `integration/ModuleImmutabilityTest.kt` (`@SpringBootTest(RANDOM_PORT)` +
   `HttpClient`): PUT a release coordinate's `.module` to a `release` repo twice → `201` then `409`
   (immutable); PUT a snapshot coordinate's `.module` to a `snapshot` repo twice → `201`/`200` (overwritable)
   (FR-003, SC-003); a GET returns the stored `.module` bytes unchanged; and a `.module` PUT to an
@@ -63,7 +63,7 @@ resolution works through the proxy.
 module; the first resolve caches it and a second resolve (cache hit) is byte-identical and still selects
 the variant.
 
-- [ ] T006 [US2] Integration test `integration/GradleModuleProxyRoundTripTest.kt`: publish the
+- [X] T006 [US2] Integration test `integration/GradleModuleProxyRoundTripTest.kt`: publish the
   feature-variant library to a hosted `releases` repo, configure a `proxy` repo whose `remoteUrl` points
   at that same instance's `releases` repo (proxy-of-self, the simplest deterministic upstream); run a
   consumer build
@@ -82,49 +82,49 @@ snippets, and renders a module detail view from the backend-parsed GMM.
 snippets with the correct coordinate + repo URL, and a detail view lists each variant's attributes,
 capabilities, dependencies, and files; a malformed `.module` still browses/downloads.
 
-- [ ] T007 [US3] Add `gradle/GradleModuleMetadata.kt`: the parsed model — `GradleModuleMetadata`
+- [X] T007 [US3] Add `gradle/GradleModuleMetadata.kt`: the parsed model — `GradleModuleMetadata`
   (`formatVersion`, `Component`, `variants`), `Variant` (`name`, `attributes: Map<String,String>`,
   `capabilities`, `dependencies`, `files`), `Capability`, `Dependency`, `ModuleFile`, and a `ParseResult`
   sealed type (`Parsed`/`Unparseable`).
-- [ ] T008 [US3] Add `gradle/GradleModuleMetadataParser.kt`: parse `.module` JSON with Jackson into
+- [X] T008 [US3] Add `gradle/GradleModuleMetadataParser.kt`: parse `.module` JSON with Jackson into
   `ParseResult`; ignore unknown fields (`FAIL_ON_UNKNOWN_PROPERTIES=false`); coerce attribute values to
   strings; never throw — malformed/empty input returns `Unparseable(reason)`.
-- [ ] T009 [P] [US3] Unit test `unit/GradleModuleMetadataParserTest.kt`: a well-formed `.module` parses to
+- [X] T009 [P] [US3] Unit test `unit/GradleModuleMetadataParserTest.kt`: a well-formed `.module` parses to
   variants with attributes/capabilities/dependencies/files; an unknown extra field is tolerated; malformed
   JSON and empty bytes return `Unparseable` (graceful, no exception).
-- [ ] T010 [US3] Extend `protocol/dto/BrowseDtos.kt`: add `Coordinate(group, artifact, version)`,
+- [X] T010 [US3] Extend `protocol/dto/BrowseDtos.kt`: add `Coordinate(group, artifact, version)`,
   `ModuleRef(path)`, optional `coordinate`/`module` on `ContentsResponse`, and `ModuleMetadataResponse`
   (`repository`, `path`, `parseable`, `component?`, `variants`).
-- [ ] T011 [US3] Extend `protocol/BrowseController.kt`: in `contents`, when the path is a coordinate's
+- [X] T011 [US3] Extend `protocol/BrowseController.kt`: in `contents`, when the path is a coordinate's
   version directory, populate `coordinate` and (when a recognized `.module` is present via
   `isModuleMetadata()`) `module`; add `GET /api/repositories/{repo}/module/**` that reads the `.module`
   bytes, parses, and returns `ModuleMetadataResponse` — `404` when the path is not a recognized module, a
   graceful `parseable:false` body (HTTP 200) when present-but-unparseable.
-- [ ] T012 [US3] Gate the new sub-resource in `security/RepositoryAuthorizationManager.kt`: in
+- [X] T012 [US3] Gate the new sub-resource in `security/RepositoryAuthorizationManager.kt`: in
   `browseTarget`, map a `GET` on the `module` sub-resource to `Action.READ` (like `contents`/`file`), so a
   private repo's module endpoint is read-gated (`401`/`403`) rather than open.
-- [ ] T013 [US3] Integration test `integration/ModuleBrowseApiTest.kt`: `contents` of a module coordinate
+- [X] T013 [US3] Integration test `integration/ModuleBrowseApiTest.kt`: `contents` of a module coordinate
   returns `coordinate` + `module` (and nulls for a Maven-only coordinate); `/module/**` returns parsed
   variants; a malformed `.module` returns `parseable:false` at HTTP 200 and the coordinate still
   lists/downloads; on a private repo `/module` returns `401` anon, `403` non-reader, `200` reader (FR-009,
   FR-006, SC-005/SC-006).
-- [ ] T014 [P] [US3] Extend `frontend/src/lib/api.ts`: add `Coordinate`, `ModuleRef`, `ModuleMetadata`
+- [X] T014 [P] [US3] Extend `frontend/src/lib/api.ts`: add `Coordinate`, `ModuleRef`, `ModuleMetadata`
   (with `Variant`/`Capability`/`Dependency`/`ModuleFile`) types, the `coordinate`/`module` fields on
   `ContentsResponse`, and `moduleMetadata(repo, path)`.
-- [ ] T015 [US3] Add `frontend/src/lib/components/GradleModuleBadge.svelte` and
+- [X] T015 [US3] Add `frontend/src/lib/components/GradleModuleBadge.svelte` and
   `frontend/src/lib/components/ConsumeSnippets.svelte` — the badge shown when a coordinate has a module;
   the snippets render Gradle Kotlin DSL, Gradle Groovy DSL, and Maven XML (tab/toggle + copy), built from
   the `coordinate` and the repository URL (page origin + `/{repo}`).
-- [ ] T016 [US3] Add `frontend/src/lib/components/ModuleDetail.svelte`: fetch `moduleMetadata` and list each
+- [X] T016 [US3] Add `frontend/src/lib/components/ModuleDetail.svelte`: fetch `moduleMetadata` and list each
   variant with its attributes, capabilities, dependencies, and files; render a graceful notice when
   `parseable:false`.
-- [ ] T017 [US3] Wire into `frontend/src/routes/r/[repo]/[...path]/+page.svelte`: when `contents.coordinate`
+- [X] T017 [US3] Wire into `frontend/src/routes/r/[repo]/[...path]/+page.svelte`: when `contents.coordinate`
   is present show `ConsumeSnippets`; when `contents.module` is present show `GradleModuleBadge` and a
   "view module" affordance that loads and renders `ModuleDetail`.
-- [ ] T018 [US3] Frontend test under `frontend/tests/` (Playwright/e2e, seeded backend): a coordinate with a
+- [X] T018 [US3] Frontend test under `frontend/tests/` (Playwright/e2e, seeded backend): a coordinate with a
   `.module` shows the Gradle badge; the consume snippets render all three forms with the correct coordinate
   and repository URL; the module detail view lists the variants.
-- [ ] T019 [US3] S3-backend parity integration test `integration/ModuleS3ParityTest.kt` (s3mock external
+- [X] T019 [US3] S3-backend parity integration test `integration/ModuleS3ParityTest.kt` (s3mock external
   process, mirroring `S3RoundTripTest`/`S3StorageProbeTest`; `backend=s3` via `@DynamicPropertySource`):
   store a `.module` on an S3-backed repo, then assert the `/api/repositories/{repo}/module/**` endpoint
   parses it to the same variants as on filesystem and that `.module` recognition + release immutability
@@ -136,10 +136,10 @@ on both storage backends.
 
 ## Phase 6: Polish & verify
 
-- [ ] T020 [P] Document Gradle support in `README.md`: publishing/consuming with Gradle Module Metadata,
+- [X] T020 [P] Document Gradle support in `README.md`: publishing/consuming with Gradle Module Metadata,
   faithful `.module` storage (release-immutable/snapshot-overwritable, proxy-cached), the module browse
   endpoint, the consume snippets, and the module detail view.
-- [ ] T021 `./gradlew build` green — detekt zero + Kover + the new unit/integration tests (Gradle
+- [X] T021 `./gradlew build` green — detekt zero + Kover + the new unit/integration tests (Gradle
   round-trips, module browse + authz, S3 parity) AND the **existing Maven and Gradle POM round-trip suites
   still pass unchanged** (`PublishResolveRoundTripTest`/`ProxyRoundTripTest` — SC-004); `verification-
   metadata.xml` untouched — AND `cd frontend && npm run build && npm test` green; commit & push to

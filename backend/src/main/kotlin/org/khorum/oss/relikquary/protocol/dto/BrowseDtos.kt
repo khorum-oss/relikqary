@@ -17,11 +17,41 @@ data class ListingEntry(
     val lastModified: Instant? = null,
 )
 
-/** The contents directly under a repository path. */
+/** A Maven/Gradle artifact coordinate derived from a version-directory browse path (feature 011). */
+data class Coordinate(
+    val group: String,
+    val artifact: String,
+    val version: String,
+)
+
+/** A reference to a recognized Gradle Module Metadata file for the browsed coordinate (feature 011). */
+data class ModuleRef(
+    val path: String,
+)
+
+/**
+ * The contents directly under a repository path. When the path is a coordinate's version directory,
+ * [coordinate] is populated (so the UI can render consume snippets); when that directory also contains a
+ * recognized `.module`, [module] points at it (so the UI can badge it and open the module view).
+ */
 data class ContentsResponse(
     val repository: String,
     val path: String,
     val entries: List<ListingEntry>,
+    val coordinate: Coordinate? = null,
+    val module: ModuleRef? = null,
+)
+
+/**
+ * Parsed Gradle Module Metadata for the browse UI (feature 011). [parseable] is false when the `.module`
+ * exists but could not be parsed (graceful degrade); the bytes are never altered.
+ */
+data class ModuleMetadataResponse(
+    val repository: String,
+    val path: String,
+    val parseable: Boolean,
+    val component: org.khorum.oss.relikquary.gradle.Component? = null,
+    val variants: List<org.khorum.oss.relikquary.gradle.Variant> = emptyList(),
 )
 
 /** Details of a single stored file, including any sibling checksum values. */

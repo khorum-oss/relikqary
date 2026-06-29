@@ -41,6 +41,19 @@ echo "Seeding artifacts (open + private)..."
 seed releases com/example/widget/1.0.0/widget-1.0.0
 seed private com/acme/lib/1.0.0/lib-1.0.0
 
+# A Gradle module coordinate (feature 011): a jar + a real .module with a variant, so the browse UI can
+# badge it, render consume snippets, and show the parsed module detail.
+seed_module() {
+  local base="http://127.0.0.1:8080/releases/com/example/gmodule/2.0.0/gmodule-2.0.0"
+  # An explicit content type is required: with curl's default form content type, Tomcat consumes the PUT
+  # body as form parameters and the stored file would be empty.
+  local octet=(-H 'Content-Type: application/octet-stream')
+  printf 'gmodule-jar' | "${CURL[@]}" "${ALICE[@]}" "${octet[@]}" -X PUT --data-binary @- "$base.jar"
+  printf '%s' '{"formatVersion":"1.1","component":{"group":"com.example","module":"gmodule","version":"2.0.0"},"variants":[{"name":"apiElements","attributes":{"org.gradle.usage":"java-api","org.gradle.category":"library"},"capabilities":[{"group":"com.example","name":"gmodule","version":"2.0.0"}],"dependencies":[{"group":"com.google.guava","module":"guava","version":{"requires":"33.0.0-jre"}}],"files":[{"name":"gmodule-2.0.0.jar","url":"gmodule-2.0.0.jar","size":11,"sha256":"deadbeef"}]}]}' \
+    | "${CURL[@]}" "${ALICE[@]}" "${octet[@]}" -X PUT --data-binary @- "$base.module"
+}
+seed_module
+
 echo "Running Playwright..."
 cd "$ROOT/frontend"
 # Prefer a pre-installed Chromium when present (this environment); otherwise let Playwright use its

@@ -75,7 +75,7 @@ class RepositoryAuthorizationManager(
         val sub = segments.getOrNull(REPO_SEGMENT_INDEX + 1)
         return when {
             request.method.equals("DELETE", ignoreCase = true) -> Target(repoName, Action.DELETE)
-            request.method.equals("GET", ignoreCase = true) && (sub == "contents" || sub == "file") ->
+            request.method.equals("GET", ignoreCase = true) && (sub == "contents" || sub == "file" || sub == "module") ->
                 Target(repoName, Action.READ)
             else -> null
         }

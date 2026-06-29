@@ -7,14 +7,19 @@
     deleteEntry,
     download,
     upload,
+    moduleMetadata,
     ApiError,
     type ContentsResponse,
     type FileDetails,
+    type ModuleMetadata,
   } from '$lib/api';
   import { login } from '$lib/auth.svelte';
   import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
   import FileListing from '$lib/components/FileListing.svelte';
   import FileDetailsPanel from '$lib/components/FileDetailsPanel.svelte';
+  import ConsumeSnippets from '$lib/components/ConsumeSnippets.svelte';
+  import GradleModuleBadge from '$lib/components/GradleModuleBadge.svelte';
+  import ModuleDetail from '$lib/components/ModuleDetail.svelte';
   import EmptyState from '$lib/components/EmptyState.svelte';
   import ErrorBanner from '$lib/components/ErrorBanner.svelte';
   import LoginForm from '$lib/components/LoginForm.svelte';
@@ -26,6 +31,8 @@
   let kind = $state('HOSTED');
   let contents = $state<ContentsResponse | null>(null);
   let selected = $state<FileDetails | null>(null);
+  let moduleMeta = $state<ModuleMetadata | null>(null);
+  let repoUrl = $derived(typeof window !== 'undefined' ? `${window.location.origin}/${repo}` : `/${repo}`);
   let error = $state('');
   let forbidden = $state('');
   let needLogin = $state(false);
@@ -59,6 +66,7 @@
     error = '';
     forbidden = '';
     selected = null;
+    moduleMeta = null;
     showUpload = false;
     try {
       const repos = await listRepositories();
@@ -83,6 +91,16 @@
       selected = await fileDetails(repo, join(path, name));
     } catch (e) {
       handle(e, () => openFile(name));
+    }
+  }
+
+  async function openModule() {
+    const ref = contents?.module;
+    if (!ref) return;
+    try {
+      moduleMeta = await moduleMetadata(repo, ref.path);
+    } catch (e) {
+      handle(e, openModule);
     }
   }
 
@@ -181,6 +199,23 @@
   {/if}
 
   <FileListing {repo} {path} entries={contents.entries} onOpen={openFile} onDelete={remove} />
+
+  {#if contents.coordinate}
+    <section class="coordinate" data-testid="coordinate-panel">
+      <div class="coordinate-head">
+        <strong>{contents.coordinate.group}:{contents.coordinate.artifact}:{contents.coordinate.version}</strong>
+        {#if contents.module}<GradleModuleBadge />{/if}
+      </div>
+      <ConsumeSnippets coordinate={contents.coordinate} {repoUrl} />
+      {#if contents.module}
+        {#if moduleMeta}
+          <ModuleDetail module={moduleMeta} />
+        {:else}
+          <button class="view-module" onclick={openModule} data-testid="view-module">View module metadata</button>
+        {/if}
+      {/if}
+    </section>
+  {/if}
 {/if}
 
 {#if selected}
@@ -201,5 +236,25 @@
     padding: 0.35rem 0.8rem;
     cursor: pointer;
     font: inherit;
+  }
+  .coordinate {
+    margin-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.8rem;
+  }
+  .coordinate-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+  }
+  .view-module {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    background: #f7fafc;
+    cursor: pointer;
   }
 </style>

@@ -131,6 +131,23 @@ at the root. The defaults are `releases` (immutable) and `snapshots` (overwritab
 
 Define repositories under `relikquary.repositories` (`{name, type}`); an unknown repo name returns 404.
 
+### Gradle modules
+
+Relikquary is a first-class Gradle repository. When you publish from Gradle with Gradle Module Metadata
+(the `.module` file Gradle emits alongside the POM and jar, carrying variants, capabilities, and
+dependency constraints), Relikquary stores and serves it byte-for-byte — recognized as a distinct
+artifact kind, immutable for a release version and overwritable for a snapshot, and **cached** by a proxy
+like the jar/POM (a versioned `.module` is not volatile, unlike `maven-metadata.xml`). A consuming Gradle
+build resolves through Relikquary using the module metadata, so variant/capability selection works
+end-to-end — including through a proxy. Maven clients that ignore `.module` resolve exactly as before.
+
+In the web UI, a coordinate that has a `.module` is badged as a **Gradle module**. Every coordinate
+offers copy-paste **consume snippets** for Gradle (Kotlin DSL and Groovy DSL) and Maven (pointing at this
+repository's URL), and a Gradle module's detail view lists each variant with its attributes, capabilities,
+dependencies, and files — parsed from the module metadata (malformed metadata degrades gracefully). The
+parsed metadata is also available over the browse API at
+`GET /api/repositories/{repo}/module/{group}/{artifact}/{version}/{artifact}-{version}.module`.
+
 ### Proxy & group repositories
 
 Beyond locally **hosted** repos, a repository's `kind` can make it a **proxy** or a **group** (both

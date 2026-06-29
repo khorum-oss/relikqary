@@ -26,10 +26,62 @@ export interface ListingEntry {
   lastModified?: string;
 }
 
+/** An artifact coordinate derived from a version-directory browse path (feature 011). */
+export interface Coordinate {
+  group: string;
+  artifact: string;
+  version: string;
+}
+
+/** A reference to a recognized Gradle Module Metadata file for the browsed coordinate (feature 011). */
+export interface ModuleRef {
+  path: string;
+}
+
 export interface ContentsResponse {
   repository: string;
   path: string;
   entries: ListingEntry[];
+  /** Present when the path is a coordinate's version directory (feature 011). */
+  coordinate?: Coordinate | null;
+  /** Present when that directory contains a recognized `.module` (feature 011). */
+  module?: ModuleRef | null;
+}
+
+export interface Capability {
+  group?: string;
+  name?: string;
+  version?: string;
+}
+
+export interface Dependency {
+  group?: string;
+  module?: string;
+  version?: string;
+}
+
+export interface ModuleFile {
+  name?: string;
+  url?: string;
+  size?: number;
+  sha256?: string;
+}
+
+export interface Variant {
+  name: string;
+  attributes: Record<string, string>;
+  capabilities: Capability[];
+  dependencies: Dependency[];
+  files: ModuleFile[];
+}
+
+/** Parsed Gradle Module Metadata; `parseable` is false when the `.module` could not be parsed. */
+export interface ModuleMetadata {
+  repository: string;
+  path: string;
+  parseable: boolean;
+  component?: { group?: string; module?: string; version?: string } | null;
+  variants: Variant[];
 }
 
 export interface FileDetails {
@@ -69,6 +121,11 @@ export function listContents(repo: string, path: string): Promise<ContentsRespon
 
 export function fileDetails(repo: string, path: string): Promise<FileDetails> {
   return getJson(`/api/repositories/${repo}/file/${path}`);
+}
+
+/** Fetches parsed Gradle Module Metadata for a recognized `.module` path (feature 011). */
+export function moduleMetadata(repo: string, path: string): Promise<ModuleMetadata> {
+  return getJson(`/api/repositories/${repo}/module/${path}`);
 }
 
 /** Deletes a file or folder prefix using the session credentials. Throws [ApiError] on failure. */
