@@ -47,7 +47,9 @@ capability resolves it (only possible via the `.module`); resolved files are byt
 - [ ] T005 [US1] Integration test `integration/ModuleImmutabilityTest.kt` (`@SpringBootTest(RANDOM_PORT)` +
   `HttpClient`): PUT a release coordinate's `.module` to a `release` repo twice → `201` then `409`
   (immutable); PUT a snapshot coordinate's `.module` to a `snapshot` repo twice → `201`/`200` (overwritable)
-  (FR-003, SC-003); a GET returns the stored `.module` bytes unchanged.
+  (FR-003, SC-003); a GET returns the stored `.module` bytes unchanged; and a `.module` PUT to an
+  auth-enabled repo with no credentials returns `401` (wire authorization applies to `.module` like any
+  file — FR-006).
 
 **Checkpoint**: the hosted Gradle publish→consume round-trip with variant selection passes; `.module`
 immutability matches the coordinate's other files.
@@ -62,8 +64,9 @@ module; the first resolve caches it and a second resolve (cache hit) is byte-ide
 the variant.
 
 - [ ] T006 [US2] Integration test `integration/GradleModuleProxyRoundTripTest.kt`: publish the
-  feature-variant library to a hosted `releases` repo, configure a `proxy` repo whose `remoteUrl` is that
-  hosted repo (proxy-of-self) — or a stub upstream seeded with the published files; run a consumer build
+  feature-variant library to a hosted `releases` repo, configure a `proxy` repo whose `remoteUrl` points
+  at that same instance's `releases` repo (proxy-of-self, the simplest deterministic upstream); run a
+  consumer build
   that requires the capability through the proxy; assert the `.module` and artifacts are fetched and
   cached on the first resolve, a second resolve serves from cache (no upstream fetch) and is byte-identical
   with variant selection intact (FR-005, SC-002).
@@ -121,17 +124,25 @@ capabilities, dependencies, and files; a malformed `.module` still browses/downl
 - [ ] T018 [US3] Frontend test under `frontend/tests/` (Playwright/e2e, seeded backend): a coordinate with a
   `.module` shows the Gradle badge; the consume snippets render all three forms with the correct coordinate
   and repository URL; the module detail view lists the variants.
+- [ ] T019 [US3] S3-backend parity integration test `integration/ModuleS3ParityTest.kt` (s3mock external
+  process, mirroring `S3RoundTripTest`/`S3StorageProbeTest`; `backend=s3` via `@DynamicPropertySource`):
+  store a `.module` on an S3-backed repo, then assert the `/api/repositories/{repo}/module/**` endpoint
+  parses it to the same variants as on filesystem and that `.module` recognition + release immutability
+  behave identically (FR-010, SC-007). The Docker/MinIO-gated path follows existing practice (auto-skips
+  without Docker).
 
-**Checkpoint**: operators can see, copy-consume, and inspect Gradle modules from the browse UI.
+**Checkpoint**: operators can see, copy-consume, and inspect Gradle modules from the browse UI, identically
+on both storage backends.
 
 ## Phase 6: Polish & verify
 
-- [ ] T019 [P] Document Gradle support in `README.md`: publishing/consuming with Gradle Module Metadata,
+- [ ] T020 [P] Document Gradle support in `README.md`: publishing/consuming with Gradle Module Metadata,
   faithful `.module` storage (release-immutable/snapshot-overwritable, proxy-cached), the module browse
   endpoint, the consume snippets, and the module detail view.
-- [ ] T020 `./gradlew build` green (detekt zero + Kover + unit/integration incl. the Gradle round-trips and
-  module browse + authz; existing Maven/Gradle POM round-trips unchanged; `verification-metadata.xml`
-  untouched) AND `cd frontend && npm run build && npm test` green; commit & push to
+- [ ] T021 `./gradlew build` green — detekt zero + Kover + the new unit/integration tests (Gradle
+  round-trips, module browse + authz, S3 parity) AND the **existing Maven and Gradle POM round-trip suites
+  still pass unchanged** (`PublishResolveRoundTripTest`/`ProxyRoundTripTest` — SC-004); `verification-
+  metadata.xml` untouched — AND `cd frontend && npm run build && npm test` green; commit & push to
   `claude/spec-011-gradle-module-metadata` (updates PR #15).
 
 ## Dependencies
@@ -139,13 +150,14 @@ capabilities, dependencies, and files; a malformed `.module` still browses/downl
 Setup (T001) → Foundational (T002–T003) precede the stories. **US1** (T004–T005) needs no production
 change beyond recognition; it proves and pins existing behaviour. **US2** (T006) reuses US1's round-trip
 fixture. **US3** backend: T007→T008→T009; T010→T011 (T011 uses recognition T002 + the parser); T012;
-T013 depends on T010–T012. **US3** frontend: T014→{T015,T016}→T017→T018. Polish (T019–T020) last.
-US1/US2 and US3 are otherwise independent (US3 needs no round-trip; US1/US2 need no parser/UI).
+T013 depends on T010–T012; the S3 parity test T019 depends on T011/T012. **US3** frontend:
+T014→{T015,T016}→T017→T018. Polish (T020–T021) last. US1/US2 and US3 are otherwise independent (US3
+needs no round-trip; US1/US2 need no parser/UI).
 
 ## Parallel opportunities
 
 - T003 ∥ later work (recognition test). T009 (parser unit) ∥ T013 (browse integration) once their inputs
-  exist. T014 (frontend types) ∥ backend US3 tasks. T015 ∥ T016 (different components). T019 ∥ tests.
+  exist. T014 (frontend types) ∥ backend US3 tasks. T015 ∥ T016 (different components). T020 (docs) ∥ tests.
 - Cross-story: US3 can proceed in parallel with US1/US2 (no shared production files except the additive
   browse layer, which US1/US2 don't touch).
 
