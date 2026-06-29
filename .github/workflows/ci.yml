@@ -26,6 +26,11 @@ jobs:
           java-version: '21'
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # A stale Kotlin incremental-compilation state in the restored Gradle home cache re-emitted an
+          # orphaned protocol.RequestLoggingFilter class (a since-moved source) onto the classpath, failing
+          # RequestLogTest with a duplicate-bean conflict. Compile from a clean Gradle home each run.
+          cache-disabled: true
       - name: Build (compile, detekt, tests, coverage, dependency verification)
         # --no-build-cache: compile from the clean checkout rather than restoring a (possibly stale)
         # cached compile output, so no orphaned class from a since-moved source file lands on the
@@ -88,6 +93,11 @@ jobs:
           java-version: '21'
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # A stale Kotlin incremental-compilation state in the restored Gradle home cache re-emitted an
+          # orphaned protocol.RequestLoggingFilter class (a since-moved source) onto the classpath, failing
+          # RequestLogTest with a duplicate-bean conflict. Compile from a clean Gradle home each run.
+          cache-disabled: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
