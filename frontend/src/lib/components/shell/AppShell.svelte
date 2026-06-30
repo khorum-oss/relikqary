@@ -24,7 +24,7 @@
 <div class="shell">
   <Sidebar {pathname} {user} {onSignIn} {onSignOut} />
   <div class="main">
-    <Topbar {title} />
+    <Topbar {title} showSearch={pathname === '/'} />
     <div class="content">
       {@render children()}
     </div>

@@ -5,6 +5,9 @@ import { test, expect } from '@playwright/test';
 test('login, browse a private repo, upload, then delete', async ({ page }) => {
   await page.goto('/');
 
+  // The configured-repository list lives behind the Repositories tab (the catalog is the default view).
+  await page.getByTestId('repos-tab').click();
+
   // The private repo shows its kind and prompts for login when opened anonymously.
   await expect(page.getByTestId('repo-row').filter({ hasText: 'private' })).toBeVisible();
   await page.getByRole('link', { name: 'private' }).click();

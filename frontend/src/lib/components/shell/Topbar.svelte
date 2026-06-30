@@ -1,15 +1,25 @@
 <script lang="ts">
   import { version } from '$lib/version';
+  import { searchQuery, setSearchQuery } from '$lib/search.svelte';
 
-  // The section header bar (feature 016): the active section title as the page's single h1, plus a
-  // version chip. A right-aligned slot is reserved for per-section controls (e.g. Phase 2 search).
-  let { title, children }: { title: string; children?: import('svelte').Snippet } = $props();
+  // The section header bar (feature 016): the active section title as the page's single h1, an optional
+  // artifact search (shown on the catalog), and a version chip.
+  let { title, showSearch = false }: { title: string; showSearch?: boolean } = $props();
 </script>
 
 <header class="topbar">
   <h1>{title}</h1>
   <div class="spacer"></div>
-  {#if children}{@render children()}{/if}
+  {#if showSearch}
+    <input
+      class="rq-input search"
+      type="search"
+      placeholder="Search artifacts…"
+      data-testid="topbar-search"
+      value={searchQuery()}
+      oninput={(e) => setSearchQuery((e.currentTarget as HTMLInputElement).value)}
+    />
+  {/if}
   <span class="version">v{version}</span>
 </header>
 
@@ -34,6 +44,11 @@
   }
   .spacer {
     flex: 1;
+  }
+  .search {
+    width: 240px;
+    padding: 6px 11px;
+    font-size: 12px;
   }
   .version {
     font-family: var(--rq-serif);

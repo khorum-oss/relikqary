@@ -110,8 +110,43 @@ async function getJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Dashboard summary figures (feature 016, Phase 2). */
+export interface Stats {
+  repositories: number;
+  artifacts: number;
+  storageBytes: number;
+}
+
+/** One aggregated `group:artifact` row in the cross-repo catalog (feature 016, Phase 2). */
+export interface CatalogEntry {
+  repository: string;
+  group: string;
+  artifact: string;
+  latestVersion: string;
+  versionCount: number;
+  sizeBytes: number;
+}
+
+export interface CatalogResponse {
+  entries: CatalogEntry[];
+  page: number;
+  pageSize: number;
+  total: number;
+  truncated: boolean;
+}
+
 export function listRepositories(): Promise<RepositorySummary[]> {
   return getJson('/api/repositories');
+}
+
+/** Read-only Dashboard stats (repository count, total objects, storage bytes). */
+export function getStats(): Promise<Stats> {
+  return getJson('/api/stats');
+}
+
+/** Aggregated artifact catalog; `pageSize` is capped server-side. */
+export function getCatalog(pageSize = 500): Promise<CatalogResponse> {
+  return getJson(`/api/catalog?pageSize=${pageSize}`);
 }
 
 export function listContents(repo: string, path: string): Promise<ContentsResponse> {

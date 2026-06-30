@@ -5,6 +5,8 @@ import { test, expect } from '@playwright/test';
 // scripts/e2e.sh at releases/com/example/gmodule/2.0.0 (jar + .module with one variant).
 test('a Gradle module coordinate is badged, offers snippets, and shows variant detail', async ({ page }) => {
   await page.goto('/');
+  // The configured-repository list lives behind the Repositories tab (the catalog is the default view).
+  await page.getByTestId('repos-tab').click();
   await page.getByRole('link', { name: 'releases' }).click();
   for (const folder of ['com/', 'example/', 'gmodule/', '2.0.0/']) {
     await page.getByRole('link', { name: folder, exact: true }).click();
