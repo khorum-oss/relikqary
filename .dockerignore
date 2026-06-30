@@ -1,0 +1,21 @@
+# Keep the image build context small and reproducible: never ship local build outputs, caches,
+# dependencies, VCS metadata, or secrets into the Docker build.
+**/build/
+**/.gradle/
+.gradle/
+.kotlin/
+**/node_modules/
+frontend/.svelte-kit/
+.git/
+.github/
+.idea/
+.vscode/
+relikquary-store*/
+**/.env
+deploy/.env
+*.asc
+*.gpg
+secret.properties
+**/http-client.private.env.json
+specs/
+.specify/

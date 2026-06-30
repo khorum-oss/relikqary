@@ -1,0 +1,217 @@
+# Relikquary on Kubernetes (feature 013) — a general starting-point manifest to apply and adapt.
+# Split deployment: backend (API) + frontend (UI), filesystem storage on a PVC (single replica).
+# Apply into your chosen namespace:  kubectl apply -n <ns> -f deploy/k8s/relikquary.yaml
+#
+# IMAGES: this project ships artifacts only (no registry push). Build the images and make them available
+# to your cluster (load into the node, or push to your registry and update the `image:` fields below).
+#
+# SECRETS: the Secret below contains PLACEHOLDERS only. Replace them via your secrets tooling before
+# exposing the server — do not commit real values.
+#
+# S3 / MULTI-REPLICA: to use S3-compatible object storage instead of the PVC, set
+# RELIKQUARY_STORAGE_BACKEND=s3 in the ConfigMap, fill the S3 keys in the Secret, remove the PVC + its
+# volume/volumeMount, and raise `replicas` on the backend Deployment (S3 is shared; the RWO PVC is not).
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: relikquary-config
+data:
+  RELIKQUARY_STORAGE_ROOT: "/data"
+  RELIKQUARY_SECURITY_USERS_0_USERNAME: "publisher"
+  RELIKQUARY_SECURITY_USERS_0_ROLES_0: "PUBLISH"
+  # Upstream proxy defaults (override if you mirror them internally):
+  RELIKQUARY_MAVEN_CENTRAL_URL: "https://repo1.maven.org/maven2"
+  RELIKQUARY_GRADLE_PLUGIN_PORTAL_URL: "https://plugins.gradle.org/m2/"
+  # --- S3 alternative (uncomment, and remove the PVC below) ---
+  # RELIKQUARY_STORAGE_BACKEND: "s3"
+  # RELIKQUARY_S3_ENDPOINT: "https://s3.example.com"
+  # RELIKQUARY_S3_REGION: "us-east-1"
+  # RELIKQUARY_S3_BUCKET: "relikquary"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: relikquary-secrets
+type: Opaque
+stringData:
+  # PLACEHOLDERS — replace before use. The password needs an encoder prefix ({noop}.. or {bcrypt}..).
+  RELIKQUARY_SECURITY_USERS_0_PASSWORD: "{noop}changeme"
+  # Only used when RELIKQUARY_STORAGE_BACKEND=s3:
+  RELIKQUARY_S3_ACCESS_KEY: "changeme"
+  RELIKQUARY_S3_SECRET_KEY: "changeme"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: relikquary-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relikquary-backend
+  labels:
+    app.kubernetes.io/name: relikquary
+    app.kubernetes.io/component: backend
+spec:
+  # ReadWriteOnce PVC ⇒ single replica. Switch to S3 storage to scale beyond 1.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: relikquary
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: relikquary
+        app.kubernetes.io/component: backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # Make the PVC group-writable by the non-root container user.
+        fsGroup: 1000
+      containers:
+        - name: backend
+          image: relikquary-backend:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: relikquary-config
+            - secretRef:
+                name: relikquary-secrets
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: relikquary-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: relikquary-backend
+spec:
+  selector:
+    app.kubernetes.io/name: relikquary
+    app.kubernetes.io/component: backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relikquary-frontend
+  labels:
+    app.kubernetes.io/name: relikquary
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: relikquary
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: relikquary
+        app.kubernetes.io/component: frontend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: frontend
+          image: relikquary-frontend:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: RELIKQUARY_BACKEND
+              value: "http://relikquary-backend:8080"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: relikquary-frontend
+spec:
+  selector:
+    app.kubernetes.io/name: relikquary
+    app.kubernetes.io/component: frontend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+# --- Ingress example (uncomment and set your host/class): route the UI to the frontend and the API +
+# --- Maven repository paths to the backend. Combined-image users route everything to one Service.
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: relikquary
+# spec:
+#   rules:
+#     - host: relikquary.example.com
+#       http:
+#         paths:
+#           - path: /api
+#             pathType: Prefix
+#             backend: { service: { name: relikquary-backend, port: { number: 8080 } } }
+#           # Add each Maven repository prefix you serve (e.g. /releases, /snapshots, /public, /maven-central):
+#           - path: /releases
+#             pathType: Prefix
+#             backend: { service: { name: relikquary-backend, port: { number: 8080 } } }
+#           - path: /
+#             pathType: Prefix
+#             backend: { service: { name: relikquary-frontend, port: { number: 8080 } } }

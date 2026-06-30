@@ -59,6 +59,21 @@ Requires JDK 21 (provisioned by the Gradle toolchain). Node 22 is needed only fo
 The `local` profile disables authentication and stores artifacts under `./relikquary-store-local`, so
 a local Gradle `maven-publish` needs no credentials.
 
+### Run in a container / Kubernetes
+
+Deployment artifacts live in [`deploy/`](deploy/README.md): a backend (API) image, a frontend (UI) image,
+and a combined single-image option, plus a Docker Compose file and a Kubernetes manifest. Quick start:
+
+```bash
+./gradlew dockerBuildSplit                                   # build backend + frontend images
+cp deploy/.env.example deploy/.env                           # set RELIKQUARY_PUBLISHER_PASSWORD
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+# API at http://localhost:8080, UI at http://localhost:8081
+```
+
+Both storage backends (filesystem volume / S3) are selectable by configuration with no rebuild. See
+[`deploy/README.md`](deploy/README.md) for Kubernetes, the combined image, and storage options.
+
 ### Run with authentication (publishing requires credentials)
 
 By default, authentication is **on**: resolving stays open, but publishing requires a configured user

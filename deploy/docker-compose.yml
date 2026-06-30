@@ -1,0 +1,65 @@
+# Relikquary via Docker Compose (feature 013). Split deployment: the backend (API + Maven repository
+# protocol) and the frontend (UI) run as separate containers; the UI proxies API/repo calls to the
+# backend. Auth is ON by default and filesystem storage persists on a named volume.
+#
+#   cp deploy/.env.example deploy/.env   # then set RELIKQUARY_PUBLISHER_PASSWORD
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d
+#
+# Clients (Maven/Gradle) publish/resolve at http://localhost:8080/<repo>/...
+# Humans use the UI at http://localhost:8081
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/backend.Dockerfile
+    environment:
+      # Auth is on by default; configure one publisher (PUBLISH role) from the env file.
+      RELIKQUARY_SECURITY_USERS_0_USERNAME: ${RELIKQUARY_PUBLISHER_USER:-publisher}
+      RELIKQUARY_SECURITY_USERS_0_PASSWORD: ${RELIKQUARY_PUBLISHER_PASSWORD:?set RELIKQUARY_PUBLISHER_PASSWORD in deploy/.env}
+      RELIKQUARY_SECURITY_USERS_0_ROLES_0: PUBLISH
+      # Filesystem storage on the persistent volume below.
+      RELIKQUARY_STORAGE_ROOT: /data
+      # --- S3 alternative: comment out the volume + RELIKQUARY_STORAGE_ROOT above and uncomment these ---
+      # RELIKQUARY_STORAGE_BACKEND: s3
+      # RELIKQUARY_S3_ENDPOINT: ${RELIKQUARY_S3_ENDPOINT}
+      # RELIKQUARY_S3_REGION: ${RELIKQUARY_S3_REGION:-us-east-1}
+      # RELIKQUARY_S3_BUCKET: ${RELIKQUARY_S3_BUCKET}
+      # RELIKQUARY_S3_ACCESS_KEY: ${RELIKQUARY_S3_ACCESS_KEY}
+      # RELIKQUARY_S3_SECRET_KEY: ${RELIKQUARY_S3_SECRET_KEY}
+    volumes:
+      - relikquary-store:/data
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health/readiness"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+    environment:
+      # The UI proxies /api and Maven repository paths to the backend service.
+      RELIKQUARY_BACKEND: http://backend:8080
+    ports:
+      - "8081:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+# --- Combined single-image alternative (UI under /ui, one container) ---
+# Replace both services above with:
+#   relikquary:
+#     build: { context: .., dockerfile: deploy/combined.Dockerfile }
+#     environment: { RELIKQUARY_SECURITY_USERS_0_USERNAME: ..., RELIKQUARY_SECURITY_USERS_0_PASSWORD: ..., RELIKQUARY_SECURITY_USERS_0_ROLES_0: PUBLISH, RELIKQUARY_STORAGE_ROOT: /data }
+#     volumes: [ "relikquary-store:/data" ]
+#     ports: [ "8080:8080" ]   # API at /, UI at /ui
+
+volumes:
+  relikquary-store:

@@ -1,0 +1,41 @@
+# nginx config for the standalone Relikquary frontend (UI) image. Rendered by the nginx entrypoint
+# (envsubst) from /etc/nginx/templates/ — only ${RELIKQUARY_BACKEND} is substituted; nginx runtime
+# variables ($uri, $host, …) are left intact.
+#
+# Strategy (mirrors the vite dev proxy in frontend/vite.config.ts): serve the static SPA for its own
+# routes/assets, and reverse-proxy everything else — the API (/api/...) and ANY Maven repository path
+# (/releases/..., /snapshots/..., /public/..., etc.) — to the backend.
+
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # SPA app shell at the root.
+    location = / {
+        try_files /index.html =404;
+    }
+
+    # SPA client-side routes (browse UI). Deep links fall back to the app shell.
+    location /r/ {
+        try_files $uri /index.html;
+    }
+
+    # Static build assets if present, otherwise treat as a backend (API / repository) request.
+    location / {
+        try_files $uri @backend;
+    }
+
+    location @backend {
+        proxy_pass ${RELIKQUARY_BACKEND};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # Artifact uploads/downloads can be large; don't buffer the whole body or cap its size.
+        proxy_request_buffering off;
+        client_max_body_size 0;
+    }
+}

@@ -10,6 +10,11 @@ node_modules/**
 
 secret.properties
 
+# Deployment env files hold real credentials; only deploy/.env.example (placeholders) is committed.
+.env
+deploy/.env
+!**/*.env.example
+
 # IntelliJ HTTP Client private environment (holds publish credentials)
 http-client.private.env.json
 **/http-client.private.env.json
