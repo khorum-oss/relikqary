@@ -146,6 +146,15 @@ at the root. The defaults are `releases` (immutable) and `snapshots` (overwritab
 
 Define repositories under `relikquary.repositories` (`{name, type}`); an unknown repo name returns 404.
 
+### Authoritative metadata (hosted repositories)
+
+For **hosted** repositories, Relikquary is the authority for `maven-metadata.xml`: after each publish it
+rebuilds the artifact-level version listing (and, for `-SNAPSHOT` versions, the version-level snapshot
+metadata) from the versions actually stored — with consistent `.sha1`/`.md5`. A client's uploaded metadata
+is accepted but does not overwrite the server's listing, so independent publishers (e.g. different CI jobs)
+never clobber each other's versions, and `latest`/`release`/version-range resolution stays correct. Proxy
+and group repositories are unaffected — their metadata remains upstream pass-through.
+
 ### Gradle modules
 
 Relikquary is a first-class Gradle repository. When you publish from Gradle with Gradle Module Metadata
