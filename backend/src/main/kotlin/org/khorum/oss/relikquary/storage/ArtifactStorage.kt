@@ -19,6 +19,13 @@ interface ArtifactStorage {
     /** Persists [content] at [key], replacing any existing content atomically. Returns bytes written. */
     fun write(key: String, content: InputStream): Long
 
+    /**
+     * Opens a pending write at [key] that becomes visible only on [ArtifactWrite.commit] (feature 015).
+     * Used to stream bytes into the cache while serving them, so an aborted/failed transfer never leaves
+     * a partial entry. The caller commits on a fully successful transfer and aborts otherwise.
+     */
+    fun openWrite(key: String): ArtifactWrite
+
     /** Lists the immediate children (folders and files) directly under [prefix] (empty = root). */
     fun list(prefix: String): List<StorageEntry>
 
@@ -55,10 +62,14 @@ data class StoredObject(
     val lastModified: Instant? = null,
 )
 
-/** A readable handle to a stored artifact and its size in bytes. */
+/**
+ * A readable handle to a stored artifact and its size in bytes. [sizeBytes] is null when the size is
+ * not known up front — only for a streamed proxy-miss whose upstream omitted Content-Length (feature
+ * 015); cache reads always know the size. A null size is served as a chunked response.
+ */
 class StoredArtifact(
     val stream: InputStream,
-    val sizeBytes: Long,
+    val sizeBytes: Long?,
 )
 
 /** An entry in a storage listing: a folder, or a file with its size and last-modified time. */

@@ -22,8 +22,10 @@ import org.khorum.oss.relikquary.repository.RepositoryResolver
 import org.khorum.oss.relikquary.repository.RepositoryType
 import org.khorum.oss.relikquary.repository.Resolution
 import org.khorum.oss.relikquary.storage.ArtifactStorage
+import org.khorum.oss.relikquary.storage.ArtifactWrite
 import org.khorum.oss.relikquary.storage.StoredArtifact
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 
 class RepositoryResolverTest {
 
@@ -48,6 +50,14 @@ class RepositoryResolverTest {
 
     private fun artifact() = StoredArtifact(ByteArrayInputStream(byteArrayOf(1, 2, 3)), 3)
 
+    /** A no-op pending cache write whose sink discards bytes — enough for the resolver to stream a tee. */
+    private fun fakeWrite(): ArtifactWrite = object : ArtifactWrite {
+        override val sink: ByteArrayOutputStream = ByteArrayOutputStream()
+        override fun commit(): Long = sink.size().toLong()
+        override fun abort() = Unit
+        override fun close() = Unit
+    }
+
     @Test
     fun `hosted hit returns the stored artifact`() {
         every { storage.openRead("releases/${jar.key}") } returns artifact()
@@ -68,14 +78,18 @@ class RepositoryResolverTest {
     }
 
     @Test
-    fun `proxy cache miss fetches, caches, then serves`() {
-        every { storage.openRead("central/${jar.key}") } returnsMany listOf(null, artifact())
+    fun `proxy cache miss fetches and streams via a pending cache write, with no re-read`() {
+        every { storage.openRead("central/${jar.key}") } returns null
         every { upstream.fetch(any(), jar.key) } returns
             UpstreamResponse.Found(ByteArrayInputStream(byteArrayOf(9)), 1)
-        every { storage.write("central/${jar.key}", any()) } returns 1
+        every { storage.openWrite("central/${jar.key}") } returns fakeWrite()
 
         assertInstanceOf(Resolution.Hit::class.java, resolver.resolve("central", jar))
-        verify(exactly = 1) { storage.write("central/${jar.key}", any()) }
+        // Tee path (feature 015): opens a pending write, never the eager write(), and reads the cache
+        // key once (the miss probe) — no post-write re-read.
+        verify(exactly = 1) { storage.openWrite("central/${jar.key}") }
+        verify(exactly = 1) { storage.openRead("central/${jar.key}") }
+        verify(exactly = 0) { storage.write(any(), any()) }
     }
 
     @Test
@@ -113,10 +127,10 @@ class RepositoryResolverTest {
     @Test
     fun `group falls through to a later proxy member`() {
         every { storage.openRead("releases/${jar.key}") } returns null
-        every { storage.openRead("central/${jar.key}") } returnsMany listOf(null, artifact())
+        every { storage.openRead("central/${jar.key}") } returns null
         every { upstream.fetch(any(), jar.key) } returns
             UpstreamResponse.Found(ByteArrayInputStream(byteArrayOf(5)), 1)
-        every { storage.write("central/${jar.key}", any()) } returns 1
+        every { storage.openWrite("central/${jar.key}") } returns fakeWrite()
         assertInstanceOf(Resolution.Hit::class.java, resolver.resolve("public", jar))
     }
 

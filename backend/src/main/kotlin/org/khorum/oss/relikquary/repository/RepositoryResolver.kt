@@ -5,6 +5,7 @@ import org.khorum.oss.relikquary.config.RepositoryProperties
 import org.khorum.oss.relikquary.coordinate.PathKind
 import org.khorum.oss.relikquary.coordinate.RepositoryPath
 import org.khorum.oss.relikquary.observability.metrics.RepositoryMetrics
+import org.khorum.oss.relikquary.proxy.TeeInputStream
 import org.khorum.oss.relikquary.proxy.UpstreamClient
 import org.khorum.oss.relikquary.proxy.UpstreamResponse
 import org.khorum.oss.relikquary.security.Action
@@ -66,9 +67,14 @@ class RepositoryResolver(
         return when (val response = upstream.fetch(repo, path.key)) {
             is UpstreamResponse.Found -> {
                 metrics.recordUpstream(repo.name, "found")
-                storage.write(cacheKey, response.stream)
-                logger.info { "Cached ${repo.name}/${path.key} from upstream" }
-                storage.openRead(cacheKey)?.let { Resolution.Hit(it) } ?: Resolution.Miss
+                // Tee (feature 015): stream the upstream bytes to the client while mirroring them into a
+                // pending cache write. The cache entry is promoted only when the client reads to EOF
+                // (TeeInputStream.close -> commit); a disconnect or upstream truncation aborts it. No
+                // post-write re-read: the served stream IS the fetched stream.
+                val pending = storage.openWrite(cacheKey)
+                val tee = TeeInputStream(response.stream, pending, response.contentLength)
+                logger.debug { "Streaming ${repo.name}/${path.key} from upstream (caching on completion)" }
+                Resolution.Hit(StoredArtifact(tee, response.contentLength))
             }
             UpstreamResponse.NotFound -> {
                 metrics.recordUpstream(repo.name, "not_found")
