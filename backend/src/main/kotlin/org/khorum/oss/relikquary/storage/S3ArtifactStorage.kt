@@ -17,7 +17,9 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import java.io.InputStream
+import java.io.OutputStream
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
 /**
@@ -63,6 +65,44 @@ class S3ArtifactStorage(
             return bytes
         } finally {
             Files.deleteIfExists(tmp)
+        }
+    }
+
+    override fun openWrite(key: String): ArtifactWrite {
+        // Buffer the streamed bytes to a temp file (putObject needs a length); upload only on commit.
+        val tmp = Files.createTempFile("relikquary-s3-", ".tmp")
+        return S3ArtifactWrite(key, tmp, Files.newOutputStream(tmp).buffered())
+    }
+
+    /** Pending write that buffers to a temp file and uploads to S3 on commit; deletes the temp on abort. */
+    private inner class S3ArtifactWrite(
+        private val key: String,
+        private val tmp: Path,
+        override val sink: OutputStream,
+    ) : ArtifactWrite {
+
+        private var done = false
+
+        override fun commit(): Long {
+            check(!done) { "pending write already resolved" }
+            done = true
+            sink.flush()
+            sink.close()
+            val size = Files.size(tmp)
+            s3.putObject(PutObjectRequest.builder().bucket(bucket).key(key).build(), RequestBody.fromFile(tmp))
+            Files.deleteIfExists(tmp)
+            return size
+        }
+
+        override fun abort() {
+            if (done) return
+            done = true
+            runCatching { sink.close() }
+            Files.deleteIfExists(tmp)
+        }
+
+        override fun close() {
+            if (!done) abort()
         }
     }
 

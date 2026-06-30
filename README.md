@@ -1,4 +1,8 @@
-# Relikquary
+<div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+<p>
+<img src="relikquary-splash.svg" alt="Relikquary" width="100%"/>
+</p>
+</div>
 
 Relikquary is a self-hosted **artifact repository server** written in Kotlin and Spring Boot. It
 ingests artifact publishes from Gradle (the standard `maven-publish` plugin) and serves them back

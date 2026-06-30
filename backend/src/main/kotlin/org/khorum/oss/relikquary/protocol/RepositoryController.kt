@@ -117,10 +117,11 @@ class RepositoryController(
         return when (val resolution = resolver.resolve(target.repo.name, target.path)) {
             is Resolution.Hit -> {
                 metrics.recordResolve(target.repo.name, "hit")
-                ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .contentLength(resolution.artifact.sizeBytes)
-                    .body(InputStreamResource(resolution.artifact.stream))
+                val builder = ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)
+                // A streamed proxy miss may have an unknown length (upstream omitted Content-Length);
+                // omit the header so the response is chunked. Cache reads always know the size.
+                resolution.artifact.sizeBytes?.let { builder.contentLength(it) }
+                builder.body(InputStreamResource(resolution.artifact.stream))
             }
             Resolution.Miss -> {
                 metrics.recordResolve(target.repo.name, "miss")

@@ -35,6 +35,9 @@ repositories {
         url = uri("http://localhost:8081/snapshots")
         isAllowInsecureProtocol = true
     }
+    val disableMavenCentral = System.getenv("DISABLE_MAVEN_CENTRAL")?.toBoolean() ?: false
+
+    if (disableMavenCentral) mavenCentral()
 }
 
 dependencies {

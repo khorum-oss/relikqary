@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #080503; }
+    * { box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #0a0703; }
+    ::-webkit-scrollbar-thumb { background: #3a2a10; border-radius: 2px; }
+    input:focus { border-color: #8B6914 !important; outline: none; }
+    .rq-row:hover { background: #1e1308 !important; }
+    .rq-nav:hover { background: #160e04 !important; }
+    button { cursor: pointer; }
+    button:hover { opacity: 0.82; }
+  </style>
+</helmet>
+
+<!-- LOGIN -->
+<sc-if value="{{ showLogin }}" hint-placeholder-val="{{ true }}">
+  <div style="height:100vh; background:#080503; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+    <div style="position:absolute; inset:0; background-image:radial-gradient(circle, #C9A22710 0.5px, transparent 0.5px); background-size:22px 22px; pointer-events:none;"></div>
+    <div style="width:390px; background:#160e06; border:1px solid #5a4210; position:relative;">
+      <div style="position:absolute; top:-2px; left:-2px; width:22px; height:22px; border-top:2px solid #C9A227; border-left:2px solid #C9A227;"></div>
+      <div style="position:absolute; top:-2px; right:-2px; width:22px; height:22px; border-top:2px solid #C9A227; border-right:2px solid #C9A227;"></div>
+      <div style="position:absolute; bottom:-2px; left:-2px; width:22px; height:22px; border-bottom:2px solid #C9A227; border-left:2px solid #C9A227;"></div>
+      <div style="position:absolute; bottom:-2px; right:-2px; width:22px; height:22px; border-bottom:2px solid #C9A227; border-right:2px solid #C9A227;"></div>
+      <div style="padding:32px; border-bottom:1px solid #3a2810; display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <svg width="48" height="48" viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="25" fill="#0e0a04" stroke="#C9A227" stroke-width="2.5"/><circle cx="28" cy="28" r="20" fill="none" stroke="#C9A227" stroke-width="0.7" opacity="0.4"/><path d="M28,9 L43,28 L28,47 L13,28 Z" fill="none" stroke="#C9A227" stroke-width="2"/><line x1="13" y1="28" x2="43" y2="28" stroke="#C9A227" stroke-width="0.8" opacity="0.4"/><path d="M28,22 L34,28 L28,34 L22,28 Z" fill="#C9A227"/></svg>
+        <div style="font-family:Cinzel,Georgia,serif; font-size:22px; font-weight:700; color:#C9A227; letter-spacing:3px;">Relikquary</div>
+        <div style="font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:2.5px; color:#8B6914; text-transform:uppercase;">Artifact Sanctuary</div>
+      </div>
+      <div style="padding:28px 30px;">
+        <div style="margin-bottom:14px;">
+          <label style="display:block; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#7a5c14; margin-bottom:6px;">Username</label>
+          <input type="text" placeholder="admin" style="width:100%; background:#0e0b04; border:1px solid #3a2810; color:#C9A227; padding:10px 12px; font-size:13px; border-radius:2px; font-family:ui-monospace,monospace;"/>
+        </div>
+        <div style="margin-bottom:22px;">
+          <label style="display:block; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#7a5c14; margin-bottom:6px;">Password</label>
+          <input type="password" placeholder="••••••••" style="width:100%; background:#0e0b04; border:1px solid #3a2810; color:#C9A227; padding:10px 12px; font-size:13px; border-radius:2px; font-family:ui-monospace,monospace;"/>
+        </div>
+        <button onClick="{{ login }}" style="width:100%; background:#241a0a; border:1px solid #C9A227; color:#C9A227; padding:12px; font-family:Cinzel,Georgia,serif; font-size:13px; letter-spacing:2px; text-transform:uppercase; border-radius:2px;">Enter the Vault</button>
+      </div>
+      <div style="padding:0 30px 18px; text-align:center; font-size:10px; color:#7a5c14; font-family:Cinzel,Georgia,serif; letter-spacing:0.5px;">Relikquary v0.1.0 — self-hosted</div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- APP SHELL -->
+<sc-if value="{{ showApp }}" hint-placeholder-val="{{ false }}">
+  <div style="height:100vh; display:flex; overflow:hidden; background:#160e06; font-family:system-ui,-apple-system,sans-serif; font-size:13px; color:#c8a840;">
+
+    <!-- SIDEBAR -->
+    <aside style="width:216px; min-width:216px; background:#0e0b04; border-right:1px solid #3a2810; display:flex; flex-direction:column; overflow:hidden;">
+      <div style="padding:16px; border-bottom:1px solid #3a2810; display:flex; align-items:center; gap:10px;">
+        <svg width="24" height="24" viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="25" fill="#0e0a04" stroke="#C9A227" stroke-width="2.5"/><circle cx="28" cy="28" r="20" fill="none" stroke="#C9A227" stroke-width="0.7" opacity="0.4"/><path d="M28,9 L43,28 L28,47 L13,28 Z" fill="none" stroke="#C9A227" stroke-width="2"/><line x1="13" y1="28" x2="43" y2="28" stroke="#C9A227" stroke-width="0.8" opacity="0.4"/><path d="M28,22 L34,28 L28,34 L22,28 Z" fill="#C9A227"/></svg>
+        <div style="font-family:Cinzel,Georgia,serif; font-size:13px; font-weight:700; color:#C9A227; letter-spacing:1px;">Relikquary</div>
+      </div>
+      <nav style="flex:1; padding:8px 0; overflow-y:auto;">
+        <div class="rq-nav" onClick="{{ gotoDashboard }}" style="display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-left:2px solid {{ dashBorder }}; background:{{ dashBg }}; color:{{ dashColor }}; margin-bottom:1px;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+          <span>Dashboard</span>
+        </div>
+        <div class="rq-nav" onClick="{{ gotoRepos }}" style="display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-left:2px solid {{ reposBorder }}; background:{{ reposBg }}; color:{{ reposColor }}; margin-bottom:1px;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="14" height="10" rx="1"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="5" y1="10.5" x2="11" y2="10.5"/></svg>
+          <span>Repositories</span>
+        </div>
+        <div class="rq-nav" onClick="{{ gotoUpload }}" style="display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-left:2px solid {{ uploadBorder }}; background:{{ uploadBg }}; color:{{ uploadColor }}; margin-bottom:1px;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="8" y1="11" x2="8" y2="3"/><polyline points="4,7 8,3 12,7"/><line x1="2" y1="13" x2="14" y2="13"/></svg>
+          <span>Publish</span>
+        </div>
+        <div class="rq-nav" onClick="{{ gotoUsers }}" style="display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-left:2px solid {{ usersBorder }}; background:{{ usersBg }}; color:{{ usersColor }}; margin-bottom:1px;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2,14 Q2,9 8,9 Q14,9 14,14"/></svg>
+          <span>Users &amp; Tokens</span>
+        </div>
+        <div class="rq-nav" onClick="{{ gotoSettings }}" style="display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-left:2px solid {{ settingsBorder }}; background:{{ settingsBg }}; color:{{ settingsColor }};">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="2.5"/><path d="M8,1.5 L8,3 M8,13 L8,14.5 M1.5,8 L3,8 M13,8 L14.5,8 M3.4,3.4 L4.5,4.5 M11.5,11.5 L12.6,12.6 M12.6,3.4 L11.5,4.5 M4.5,11.5 L3.4,12.6"/></svg>
+          <span>Settings</span>
+        </div>
+      </nav>
+      <div style="padding:12px 14px; border-top:1px solid #3a2810;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+          <div style="width:26px; height:26px; background:#241a0a; border:1px solid #5a4210; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; color:#C9A227; font-family:Cinzel,Georgia,serif; flex-shrink:0;">A</div>
+          <div><div style="font-size:12px; color:#C9A227; font-family:Cinzel,Georgia,serif;">admin</div><div style="font-size:10px; color:#8B6914;">Administrator</div></div>
+        </div>
+        <button onClick="{{ logout }}" style="width:100%; background:none; border:1px solid #2a1e0c; color:#8B6914; padding:6px; font-size:10px; font-family:Cinzel,Georgia,serif; letter-spacing:1px; text-transform:uppercase; border-radius:2px;">Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div style="flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0;">
+      <!-- Topbar -->
+      <div style="height:48px; background:#130e06; border-bottom:1px solid #3a2810; display:flex; align-items:center; padding:0 22px; gap:10px; flex-shrink:0;">
+        <div style="display:{{ breadcrumbDisplay }}; align-items:center; gap:8px;">
+          <span onClick="{{ gotoRepos }}" style="font-size:11px; color:#8B6914; cursor:pointer; font-family:Cinzel,Georgia,serif;">Repositories</span>
+          <span style="color:#7a5c14;">›</span>
+        </div>
+        <div style="font-family:Cinzel,Georgia,serif; font-size:15px; font-weight:600; color:#C9A227; letter-spacing:1px; flex:1;">{{ pageTitle }}</div>
+        <div style="display:{{ searchDisplay }};">
+          <input type="text" placeholder="Search artifacts…" style="background:#0e0b04; border:1px solid #3a2810; color:#C9A227; padding:6px 11px; font-size:12px; width:230px; border-radius:2px; font-family:ui-monospace,monospace;"/>
+        </div>
+        <div style="font-size:10px; color:#7a5c14; font-family:Cinzel,Georgia,serif; padding:3px 8px; border:1px solid #2a1e0c; border-radius:2px; white-space:nowrap;">v0.1.0</div>
+      </div>
+
+      <!-- Content -->
+      <div style="flex:1; overflow-y:auto; padding:22px;">
+
+        <!-- DASHBOARD -->
+        <div style="display:{{ dashDisplay }};">
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px;">
+            <div style="background:#241a0a; border:1px solid #3a2810; border-top:2px solid #C9A227; padding:18px 20px;">
+              <div style="font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#8B6914; margin-bottom:8px;">Total Artifacts</div>
+              <div style="font-family:Cinzel,Georgia,serif; font-size:34px; font-weight:700; color:#C9A227; margin-bottom:4px;">2,847</div>
+              <div style="font-size:11px; color:#7a5c14;">+12 published today</div>
+            </div>
+            <div style="background:#241a0a; border:1px solid #3a2810; border-top:2px solid #8B6914; padding:18px 20px;">
+              <div style="font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#8B6914; margin-bottom:8px;">Repositories</div>
+              <div style="font-family:Cinzel,Georgia,serif; font-size:34px; font-weight:700; color:#C9A227; margin-bottom:4px;">12</div>
+              <div style="font-size:11px; color:#7a5c14;">across 4 namespaces</div>
+            </div>
+            <div style="background:#241a0a; border:1px solid #3a2810; border-top:2px solid #5a4210; padding:18px 20px;">
+              <div style="font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#8B6914; margin-bottom:8px;">Storage Used</div>
+              <div style="font-family:Cinzel,Georgia,serif; font-size:34px; font-weight:700; color:#C9A227; margin-bottom:4px;">4.2 GB</div>
+              <div style="font-size:11px; color:#7a5c14;">of 50 GB allocated</div>
+              <div style="margin-top:10px; height:3px; background:#2e1e08; border-radius:2px;"><div style="width:8.4%; height:100%; background:#C9A227; border-radius:2px;"></div></div>
+            </div>
+          </div>
+          <div style="background:#241a0a; border:1px solid #3a2810;">
+            <div style="padding:12px 18px; border-bottom:1px solid #3a2810; display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#8B6914;">Recent Publishes</div>
+              <span onClick="{{ gotoRepos }}" style="font-size:11px; color:#8B6914; cursor:pointer; font-family:Cinzel,Georgia,serif;">View all →</span>
+            </div>
+            <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr; padding:7px 18px; border-bottom:1px solid #2a1a0a; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#7a5c14;">
+              <div>Artifact</div><div>Version</div><div>By</div><div>When</div>
+            </div>
+            <div class="rq-row" onClick="{{ gotoArtifact }}" style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr; padding:11px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">com.acme.payments<span style="color:#8B6914;">:</span>payment-gateway</div>
+              <div style="font-size:12px; color:#9a7820;">2.4.1</div><div style="font-size:12px; color:#7a5c14;">deploy_bot</div><div style="font-size:12px; color:#8B6914;">2h ago</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr; padding:11px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">com.acme.core<span style="color:#8B6914;">:</span>auth-service</div>
+              <div style="font-size:12px; color:#9a7820;">1.8.0</div><div style="font-size:12px; color:#7a5c14;">deploy_bot</div><div style="font-size:12px; color:#8B6914;">5h ago</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr; padding:11px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">com.acme.core<span style="color:#8B6914;">:</span>data-model</div>
+              <div style="font-size:12px; color:#9a7820;">3.0.0</div><div style="font-size:12px; color:#7a5c14;">alice</div><div style="font-size:12px; color:#8B6914;">1d ago</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr; padding:11px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">org.foundation<span style="color:#8B6914;">:</span>http-client</div>
+              <div style="font-size:12px; color:#9a7820;">4.2.1</div><div style="font-size:12px; color:#7a5c14;">deploy_bot</div><div style="font-size:12px; color:#8B6914;">2d ago</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr; padding:11px 18px; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">io.relikquary<span style="color:#8B6914;">:</span>storage-api</div>
+              <div style="font-size:12px; color:#9a7820;">0.3.0</div><div style="font-size:12px; color:#7a5c14;">admin</div><div style="font-size:12px; color:#8B6914;">3d ago</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REPOSITORIES -->
+        <div style="display:{{ reposDisplay }};">
+          <div style="background:#241a0a; border:1px solid #3a2810;">
+            <div style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:7px 18px; border-bottom:1px solid #3a2810; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#7a5c14;">
+              <div>Group : Artifact</div><div>Latest</div><div>Updated</div><div>Size</div><div style="text-align:right;">Versions</div>
+            </div>
+            <div class="rq-row" onClick="{{ gotoArtifact }}" style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">com.acme.payments<span style="color:#8B6914;">:</span>payment-gateway</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-family:ui-monospace,monospace; font-size:11px; color:#C9A227; border-radius:2px;">2.4.1</span></div>
+              <div style="font-size:12px; color:#7a5c14;">2h ago</div><div style="font-size:12px; color:#7a5c14;">1.2 MB</div><div style="font-size:12px; color:#8B6914; text-align:right;">14</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">com.acme.core<span style="color:#8B6914;">:</span>auth-service</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-family:ui-monospace,monospace; font-size:11px; color:#C9A227; border-radius:2px;">1.8.0</span></div>
+              <div style="font-size:12px; color:#7a5c14;">5h ago</div><div style="font-size:12px; color:#7a5c14;">847 KB</div><div style="font-size:12px; color:#8B6914; text-align:right;">8</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">com.acme.core<span style="color:#8B6914;">:</span>data-model</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-family:ui-monospace,monospace; font-size:11px; color:#C9A227; border-radius:2px;">3.0.0</span></div>
+              <div style="font-size:12px; color:#7a5c14;">1d ago</div><div style="font-size:12px; color:#7a5c14;">234 KB</div><div style="font-size:12px; color:#8B6914; text-align:right;">22</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">org.foundation.commons<span style="color:#8B6914;">:</span>http-client</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-family:ui-monospace,monospace; font-size:11px; color:#C9A227; border-radius:2px;">4.2.1</span></div>
+              <div style="font-size:12px; color:#7a5c14;">2d ago</div><div style="font-size:12px; color:#7a5c14;">512 KB</div><div style="font-size:12px; color:#8B6914; text-align:right;">31</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">io.relikquary<span style="color:#8B6914;">:</span>storage-api</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-family:ui-monospace,monospace; font-size:11px; color:#C9A227; border-radius:2px;">0.3.0</span></div>
+              <div style="font-size:12px; color:#7a5c14;">3d ago</div><div style="font-size:12px; color:#7a5c14;">89 KB</div><div style="font-size:12px; color:#8B6914; text-align:right;">3</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">com.acme.payments<span style="color:#8B6914;">:</span>invoice-renderer</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-family:ui-monospace,monospace; font-size:11px; color:#C9A227; border-radius:2px;">1.1.0</span></div>
+              <div style="font-size:12px; color:#7a5c14;">5d ago</div><div style="font-size:12px; color:#7a5c14;">2.1 MB</div><div style="font-size:12px; color:#8B6914; text-align:right;">6</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">com.acme.analytics<span style="color:#8B6914;">:</span>events-sdk</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-family:ui-monospace,monospace; font-size:11px; color:#C9A227; border-radius:2px;">2.0.0</span></div>
+              <div style="font-size:12px; color:#7a5c14;">1w ago</div><div style="font-size:12px; color:#7a5c14;">445 KB</div><div style="font-size:12px; color:#8B6914; text-align:right;">11</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:2.2fr 1.2fr 1fr 1fr 70px; padding:12px 18px; cursor:pointer; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">org.foundation.commons<span style="color:#8B6914;">:</span>validation</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-family:ui-monospace,monospace; font-size:11px; color:#C9A227; border-radius:2px;">1.5.3</span></div>
+              <div style="font-size:12px; color:#7a5c14;">1w ago</div><div style="font-size:12px; color:#7a5c14;">156 KB</div><div style="font-size:12px; color:#8B6914; text-align:right;">9</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ARTIFACT DETAIL -->
+        <div style="display:{{ artifactDisplay }};">
+          <div style="background:#241a0a; border:1px solid #3a2810; border-top:2px solid #C9A227; padding:20px 22px; margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+              <div>
+                <div style="font-family:Cinzel,Georgia,serif; font-size:20px; font-weight:700; color:#C9A227; margin-bottom:3px;">payment-gateway</div>
+                <div style="font-family:ui-monospace,monospace; font-size:12px; color:#7a5c14;">com.acme.payments</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span style="font-size:10px; color:#8B6914; font-family:Cinzel,Georgia,serif; text-transform:uppercase; letter-spacing:1px;">Version</span>
+                <span style="background:#241a0a; border:1px solid #C9A227; padding:4px 12px; font-family:ui-monospace,monospace; font-size:13px; color:#C9A227; border-radius:2px;">2.4.1</span>
+                <span style="background:#241a0a; border:1px solid #3a2810; padding:4px 10px; font-family:ui-monospace,monospace; font-size:12px; color:#8B6914; border-radius:2px; cursor:pointer;">2.4.0</span>
+                <span style="background:#241a0a; border:1px solid #3a2810; padding:4px 10px; font-family:ui-monospace,monospace; font-size:12px; color:#8B6914; border-radius:2px; cursor:pointer;">2.3.2</span>
+                <span style="font-size:11px; color:#8B6914; cursor:pointer;">+11 more</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:22px; margin-top:14px; padding-top:14px; border-top:1px solid #2a1e0c; flex-wrap:wrap;">
+              <div><div style="font-size:10px; color:#8B6914; letter-spacing:1px; text-transform:uppercase; font-family:Cinzel,Georgia,serif; margin-bottom:3px;">Published</div><div style="font-size:12px; color:#8B6914;">Jun 29, 2026 · 14:32 UTC</div></div>
+              <div><div style="font-size:10px; color:#8B6914; letter-spacing:1px; text-transform:uppercase; font-family:Cinzel,Georgia,serif; margin-bottom:3px;">By</div><div style="font-size:12px; color:#8B6914;">deploy_bot</div></div>
+              <div><div style="font-size:10px; color:#8B6914; letter-spacing:1px; text-transform:uppercase; font-family:Cinzel,Georgia,serif; margin-bottom:3px;">Total Size</div><div style="font-size:12px; color:#8B6914;">4.6 MB</div></div>
+              <div><div style="font-size:10px; color:#8B6914; letter-spacing:1px; text-transform:uppercase; font-family:Cinzel,Georgia,serif; margin-bottom:3px;">SHA-256</div><div style="font-size:11px; color:#8B6914; font-family:ui-monospace,monospace;">a3f9c2…e81d</div></div>
+            </div>
+          </div>
+          <!-- Tabs -->
+          <div style="background:#241a0a; border:1px solid #3a2810; margin-bottom:14px;">
+            <div style="display:flex; border-bottom:1px solid #3a2810;">
+              <div onClick="{{ setTabGradle }}" style="padding:10px 18px; font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1px; cursor:pointer; border-bottom:2px solid {{ tabGradleLine }}; color:{{ tabGradleColor }}; margin-bottom:-1px;">Gradle</div>
+              <div onClick="{{ setTabMaven }}" style="padding:10px 18px; font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1px; cursor:pointer; border-bottom:2px solid {{ tabMavenLine }}; color:{{ tabMavenColor }}; margin-bottom:-1px;">Maven</div>
+            </div>
+            <div style="display:{{ gradleDisplay }}; padding:16px 18px;">
+              <div style="font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#8B6914; margin-bottom:8px;">build.gradle.kts</div>
+              <div style="background:#0e0b04; border:1px solid #2a1e0c; padding:14px 16px; border-radius:2px; position:relative;">
+                <pre style="margin:0; font-family:ui-monospace,'SF Mono',monospace; font-size:12px; line-height:1.7; overflow-x:auto; color:#7a5c14;">repositories {
+    maven {
+        url = uri(<span style="color:#9a7820;">"https://your-server/repository"</span>)
+        credentials {
+            username = System.getenv(<span style="color:#9a7820;">"RELIKQUARY_USER"</span>)
+            password = System.getenv(<span style="color:#9a7820;">"RELIKQUARY_TOKEN"</span>)
+        }
+    }
+}
+
+dependencies {
+    implementation(<span style="color:#C9A227;">"com.acme.payments:payment-gateway:2.4.1"</span>)
+}</pre>
+                <button onClick="{{ copyGradle }}" style="position:absolute; top:10px; right:10px; background:#241a0a; border:1px solid #3a2a10; color:#8B6914; padding:4px 10px; font-size:10px; font-family:Cinzel,Georgia,serif; letter-spacing:1px; border-radius:2px;">{{ copyGradleLabel }}</button>
+              </div>
+            </div>
+            <div style="display:{{ mavenDisplay }}; padding:16px 18px;">
+              <div style="font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#8B6914; margin-bottom:8px;">pom.xml</div>
+              <div style="background:#0e0b04; border:1px solid #2a1e0c; padding:14px 16px; border-radius:2px;">
+                <pre style="margin:0; font-family:ui-monospace,'SF Mono',monospace; font-size:12px; line-height:1.7; overflow-x:auto;"><span style="color:#8B6914;">&lt;dependency&gt;</span>
+  <span style="color:#8B6914;">&lt;groupId&gt;</span><span style="color:#9a7820;">com.acme.payments</span><span style="color:#8B6914;">&lt;/groupId&gt;</span>
+  <span style="color:#8B6914;">&lt;artifactId&gt;</span><span style="color:#C9A227;">payment-gateway</span><span style="color:#8B6914;">&lt;/artifactId&gt;</span>
+  <span style="color:#8B6914;">&lt;version&gt;</span><span style="color:#9a7820;">2.4.1</span><span style="color:#8B6914;">&lt;/version&gt;</span>
+<span style="color:#8B6914;">&lt;/dependency&gt;</span></pre>
+              </div>
+            </div>
+          </div>
+          <!-- Files -->
+          <div style="background:#241a0a; border:1px solid #3a2810;">
+            <div style="padding:11px 18px; border-bottom:1px solid #3a2810; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#8B6914;">Files</div>
+            <div class="rq-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">payment-gateway-2.4.1.jar</div>
+              <div style="display:flex; gap:12px; align-items:center;"><span style="font-size:11px; color:#8B6914;">1.2 MB</span><button style="background:#241a0a; border:1px solid #3a2810; color:#8B6914; padding:3px 10px; font-size:10px; font-family:Cinzel,Georgia,serif; border-radius:2px;">Download</button></div>
+            </div>
+            <div class="rq-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">payment-gateway-2.4.1.pom</div>
+              <div style="display:flex; gap:12px; align-items:center;"><span style="font-size:11px; color:#8B6914;">4.1 KB</span><button style="background:#241a0a; border:1px solid #3a2810; color:#8B6914; padding:3px 10px; font-size:10px; font-family:Cinzel,Georgia,serif; border-radius:2px;">Download</button></div>
+            </div>
+            <div class="rq-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 18px; border-bottom:1px solid #2a1a0a; cursor:pointer;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">payment-gateway-2.4.1-sources.jar</div>
+              <div style="display:flex; gap:12px; align-items:center;"><span style="font-size:11px; color:#8B6914;">892 KB</span><button style="background:#241a0a; border:1px solid #3a2810; color:#8B6914; padding:3px 10px; font-size:10px; font-family:Cinzel,Georgia,serif; border-radius:2px;">Download</button></div>
+            </div>
+            <div class="rq-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px 18px; cursor:pointer;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">payment-gateway-2.4.1-javadoc.jar</div>
+              <div style="display:flex; gap:12px; align-items:center;"><span style="font-size:11px; color:#8B6914;">2.3 MB</span><button style="background:#241a0a; border:1px solid #3a2810; color:#8B6914; padding:3px 10px; font-size:10px; font-family:Cinzel,Georgia,serif; border-radius:2px;">Download</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PUBLISH -->
+        <div style="display:{{ uploadDisplay }}; max-width:740px;">
+          <div style="background:#241a0a; border:1px solid #3a2810; margin-bottom:14px;">
+            <div style="padding:14px 18px; border-bottom:1px solid #3a2810;">
+              <div style="font-family:Cinzel,Georgia,serif; font-size:13px; font-weight:600; color:#C9A227; margin-bottom:2px;">Publish via Gradle</div>
+              <div style="font-size:11px; color:#8B6914;">Add to your build.gradle.kts and run <span style="font-family:ui-monospace,monospace; color:#8B6914;">./gradlew publish</span></div>
+            </div>
+            <div style="padding:16px 18px;">
+              <div style="background:#0e0b04; border:1px solid #2a1e0c; padding:14px 16px; border-radius:2px; position:relative;">
+                <pre style="margin:0; font-family:ui-monospace,'SF Mono',monospace; font-size:12px; line-height:1.7; overflow-x:auto; color:#7a5c14;">plugins { `maven-publish` }
+
+publishing {
+    publications {
+        create&lt;<span style="color:#9a7820;">MavenPublication</span>&gt;(<span style="color:#C9A227;">"release"</span>) {
+            from(components[<span style="color:#9a7820;">"java"</span>])
+        }
+    }
+    repositories {
+        maven {
+            name = <span style="color:#C9A227;">"relikquary"</span>
+            url = uri(<span style="color:#9a7820;">"https://your-server/repository"</span>)
+            credentials {
+                username = System.getenv(<span style="color:#9a7820;">"RELIKQUARY_USER"</span>)
+                password = System.getenv(<span style="color:#9a7820;">"RELIKQUARY_TOKEN"</span>)
+            }
+        }
+    }
+}</pre>
+                <button style="position:absolute; top:10px; right:10px; background:#241a0a; border:1px solid #3a2a10; color:#8B6914; padding:4px 10px; font-size:10px; font-family:Cinzel,Georgia,serif; letter-spacing:1px; border-radius:2px;">Copy</button>
+              </div>
+            </div>
+          </div>
+          <div style="background:#241a0a; border:1px solid #3a2810; padding:16px 18px; margin-bottom:14px;">
+            <div style="font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#8B6914; margin-bottom:10px;">API Token</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <div style="flex:1; background:#0e0b04; border:1px solid #2a1e0c; padding:9px 12px; font-family:ui-monospace,monospace; font-size:12px; color:#8B6914; border-radius:2px; letter-spacing:2px;">rlq_••••••••••••••••••••••••••••••••••</div>
+              <button style="background:#241a0a; border:1px solid #5a4210; color:#8B6914; padding:9px 14px; font-size:11px; font-family:Cinzel,Georgia,serif; letter-spacing:1px; border-radius:2px; white-space:nowrap;">Reveal</button>
+              <button style="background:#241a0a; border:1px solid #5a4210; color:#8B6914; padding:9px 14px; font-size:11px; font-family:Cinzel,Georgia,serif; letter-spacing:1px; border-radius:2px;">Copy</button>
+            </div>
+          </div>
+          <div style="background:#241a0a; border:1px solid #3a2810;">
+            <div style="padding:14px 18px; border-bottom:1px solid #3a2810;">
+              <div style="font-family:Cinzel,Georgia,serif; font-size:13px; font-weight:600; color:#C9A227; margin-bottom:2px;">Manual Upload</div>
+              <div style="font-size:11px; color:#8B6914;">Upload JAR, AAR, POM, or other artifacts directly</div>
+            </div>
+            <div style="padding:18px;">
+              <div style="border:1px dashed #3a2a10; padding:40px; text-align:center; border-radius:2px; cursor:pointer;">
+                <div style="font-family:Cinzel,Georgia,serif; font-size:13px; color:#8B6914; letter-spacing:1px; margin-bottom:5px;">Drop files here</div>
+                <div style="font-size:11px; color:#7a5c14;">or click to browse · JAR, AAR, POM accepted</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USERS & TOKENS -->
+        <div style="display:{{ usersDisplay }};">
+          <div style="display:flex; align-items:flex-end; margin-bottom:18px;">
+            <div onClick="{{ setTabUsers }}" style="padding:9px 18px; font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1px; cursor:pointer; border:1px solid #3a2810; border-bottom:2px solid {{ tabUsersLine }}; color:{{ tabUsersColor }}; background:#241a0a; margin-right:2px; border-radius:2px 2px 0 0;">Users</div>
+            <div onClick="{{ setTabTokens }}" style="padding:9px 18px; font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1px; cursor:pointer; border:1px solid #3a2810; border-bottom:2px solid {{ tabTokensLine }}; color:{{ tabTokensColor }}; background:#241a0a; border-radius:2px 2px 0 0;">API Tokens</div>
+            <div style="flex:1;"></div>
+            <button style="background:#241a0a; border:1px solid #5a4210; color:#8B6914; padding:7px 16px; font-size:11px; font-family:Cinzel,Georgia,serif; letter-spacing:1px; border-radius:2px; margin-bottom:2px;">+ New</button>
+          </div>
+          <div style="display:{{ tabUsersDisplay }}; background:#241a0a; border:1px solid #3a2810;">
+            <div style="display:grid; grid-template-columns:1fr 1.5fr 1fr 1fr; padding:7px 18px; border-bottom:1px solid #3a2810; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#7a5c14;">
+              <div>Username</div><div>Email</div><div>Role</div><div>Last Active</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:1fr 1.5fr 1fr 1fr; padding:12px 18px; border-bottom:1px solid #2a1a0a; align-items:center;">
+              <div style="display:flex; align-items:center; gap:8px;"><div style="width:26px; height:26px; background:#241a0a; border:1px solid #5a4210; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; color:#C9A227; font-family:Cinzel,Georgia,serif; flex-shrink:0;">A</div><span style="color:#C9A227;">admin</span></div>
+              <div style="font-size:12px; color:#7a5c14;">admin@vault.local</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-size:10px; color:#C9A227; border-radius:2px; font-family:Cinzel,Georgia,serif;">Administrator</span></div>
+              <div style="font-size:12px; color:#8B6914;">Now</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:1fr 1.5fr 1fr 1fr; padding:12px 18px; border-bottom:1px solid #2a1a0a; align-items:center;">
+              <div style="display:flex; align-items:center; gap:8px;"><div style="width:26px; height:26px; background:#241a0a; border:1px solid #3a2810; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; color:#7a5c14; font-family:Cinzel,Georgia,serif; flex-shrink:0;">D</div><span style="color:#C9A227;">deploy_bot</span></div>
+              <div style="font-size:12px; color:#7a5c14;">ci@pipeline.local</div>
+              <div><span style="background:#241a0a; border:1px solid #3a2a10; padding:2px 8px; font-size:10px; color:#8B6914; border-radius:2px; font-family:Cinzel,Georgia,serif;">Publisher</span></div>
+              <div style="font-size:12px; color:#8B6914;">1h ago</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:1fr 1.5fr 1fr 1fr; padding:12px 18px; align-items:center;">
+              <div style="display:flex; align-items:center; gap:8px;"><div style="width:26px; height:26px; background:#241a0a; border:1px solid #3a2810; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; color:#7a5c14; font-family:Cinzel,Georgia,serif; flex-shrink:0;">A</div><span style="color:#C9A227;">alice</span></div>
+              <div style="font-size:12px; color:#7a5c14;">alice@acme.com</div>
+              <div><span style="background:#241a0a; border:1px solid #3a2810; padding:2px 8px; font-size:10px; color:#8B6914; border-radius:2px; font-family:Cinzel,Georgia,serif;">Viewer</span></div>
+              <div style="font-size:12px; color:#8B6914;">3d ago</div>
+            </div>
+          </div>
+          <div style="display:{{ tabTokensDisplay }}; background:#241a0a; border:1px solid #3a2810;">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 80px 70px; padding:7px 18px; border-bottom:1px solid #3a2810; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#7a5c14;">
+              <div>Name</div><div>Created</div><div>Last Used</div><div>Scope</div><div></div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:1fr 1fr 1fr 80px 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">ci-deploy</div><div style="font-size:12px; color:#7a5c14;">Jun 15, 2026</div><div style="font-size:12px; color:#7a5c14;">2h ago</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-size:10px; color:#C9A227; border-radius:2px;">publish</span></div>
+              <div style="font-size:11px; color:#8B6914; cursor:pointer; font-family:Cinzel,Georgia,serif; text-align:right;">Revoke</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:1fr 1fr 1fr 80px 70px; padding:12px 18px; border-bottom:1px solid #2a1a0a; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">readonly-01</div><div style="font-size:12px; color:#7a5c14;">May 2, 2026</div><div style="font-size:12px; color:#7a5c14;">1d ago</div>
+              <div><span style="background:#241a0a; border:1px solid #3a2810; padding:2px 8px; font-size:10px; color:#7a5c14; border-radius:2px;">read</span></div>
+              <div style="font-size:11px; color:#8B6914; cursor:pointer; font-family:Cinzel,Georgia,serif; text-align:right;">Revoke</div>
+            </div>
+            <div class="rq-row" style="display:grid; grid-template-columns:1fr 1fr 1fr 80px 70px; padding:12px 18px; align-items:center;">
+              <div style="font-family:ui-monospace,monospace; font-size:12px; color:#C9A227;">team-build</div><div style="font-size:12px; color:#7a5c14;">Apr 10, 2026</div><div style="font-size:12px; color:#7a5c14;">Never</div>
+              <div><span style="background:#241a0a; border:1px solid #5a4210; padding:2px 8px; font-size:10px; color:#C9A227; border-radius:2px;">publish</span></div>
+              <div style="font-size:11px; color:#8B6914; cursor:pointer; font-family:Cinzel,Georgia,serif; text-align:right;">Revoke</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div style="display:{{ settingsDisplay }}; max-width:620px;">
+          <div style="background:#241a0a; border:1px solid #3a2810; margin-bottom:14px;">
+            <div style="padding:12px 18px; border-bottom:1px solid #3a2810; font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#8B6914;">Server</div>
+            <div style="padding:18px; display:flex; flex-direction:column; gap:14px;">
+              <div>
+                <label style="display:block; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#8B6914; margin-bottom:6px;">Base URL</label>
+                <input type="text" value="https://relikquary.acme.com" style="width:100%; background:#0e0b04; border:1px solid #3a2810; color:#C9A227; padding:9px 12px; font-size:13px; border-radius:2px; font-family:ui-monospace,monospace;"/>
+              </div>
+              <div>
+                <label style="display:block; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#8B6914; margin-bottom:6px;">Storage Path</label>
+                <input type="text" value="/var/relikquary/artifacts" style="width:100%; background:#0e0b04; border:1px solid #3a2810; color:#C9A227; padding:9px 12px; font-size:13px; border-radius:2px; font-family:ui-monospace,monospace;"/>
+              </div>
+            </div>
+          </div>
+          <div style="background:#241a0a; border:1px solid #3a2810; margin-bottom:14px;">
+            <div style="padding:12px 18px; border-bottom:1px solid #3a2810; font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#8B6914;">Authentication</div>
+            <div style="padding:18px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:13px; color:#C9A227; margin-bottom:2px;">Allow Registration</div><div style="font-size:11px; color:#8B6914;">New users can create accounts</div></div>
+                <div style="width:38px; height:20px; background:#241a0a; border:1px solid #3a2810; border-radius:10px; position:relative; cursor:pointer; flex-shrink:0;"><div style="width:14px; height:14px; background:#3a2a10; border-radius:50%; position:absolute; top:2px; left:2px;"></div></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><div style="font-size:13px; color:#C9A227; margin-bottom:2px;">Require Auth for Downloads</div><div style="font-size:11px; color:#8B6914;">Unauthenticated clients cannot resolve artifacts</div></div>
+                <div style="width:38px; height:20px; background:#2a1804; border:1px solid #C9A227; border-radius:10px; position:relative; cursor:pointer; flex-shrink:0;"><div style="width:14px; height:14px; background:#C9A227; border-radius:50%; position:absolute; top:2px; right:2px;"></div></div>
+              </div>
+              <div>
+                <label style="display:block; font-family:Cinzel,Georgia,serif; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#8B6914; margin-bottom:6px;">Session Timeout</label>
+                <input type="text" value="8h" style="width:90px; background:#0e0b04; border:1px solid #3a2810; color:#C9A227; padding:9px 12px; font-size:13px; border-radius:2px; font-family:ui-monospace,monospace;"/>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button style="background:none; border:1px solid #3a2810; color:#8B6914; padding:9px 18px; font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; border-radius:2px;">Reset</button>
+            <button style="background:#241a0a; border:1px solid #C9A227; color:#C9A227; padding:9px 18px; font-family:Cinzel,Georgia,serif; font-size:11px; letter-spacing:1px; text-transform:uppercase; border-radius:2px;">Save Changes</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen: 'login', detailTab: 'gradle', usersTab: 'users', copyGradleLabel: 'Copy' };
+
+  nav(s) { this.setState({ screen: s }); }
+  isActive(s) { return this.state.screen === s; }
+  nb(s) { return this.isActive(s) ? '#C9A227' : 'transparent'; }
+  bg(s) { return this.isActive(s) ? '#1e1308' : 'transparent'; }
+  nc(s) { return this.isActive(s) ? '#C9A227' : '#7a5c14'; }
+  show(s) { return s ? 'block' : 'none'; }
+  flex(s) { return s ? 'flex' : 'none'; }
+
+  titles = { dashboard:'Dashboard', repos:'Repositories', artifact:'payment-gateway', upload:'Publish', users:'Users & Tokens', settings:'Settings' };
+
+  copyGradle() {
+    const code = `repositories {\n    maven {\n        url = uri("https://your-server/repository")\n    }\n}\ndependencies {\n    implementation("com.acme.payments:payment-gateway:2.4.1")\n}`;
+    navigator.clipboard.writeText(code).catch(() => {});
+    this.setState({ copyGradleLabel: 'Copied!' });
+    setTimeout(() => this.setState({ copyGradleLabel: 'Copy' }), 2200);
+  }
+
+  renderVals() {
+    const s = this.state.screen;
+    const dt = this.state.detailTab;
+    const ut = this.state.usersTab;
+    return {
+      showLogin: s === 'login',
+      showApp: s !== 'login',
+      dashDisplay:     this.show(s === 'dashboard'),
+      reposDisplay:    this.show(s === 'repos'),
+      artifactDisplay: this.show(s === 'artifact'),
+      uploadDisplay:   this.show(s === 'upload'),
+      usersDisplay:    this.show(s === 'users'),
+      settingsDisplay: this.show(s === 'settings'),
+      searchDisplay:    this.flex(s === 'repos'),
+      breadcrumbDisplay: this.flex(s === 'artifact'),
+
+      login: () => this.nav('dashboard'),
+      logout: () => this.nav('login'),
+      gotoDashboard: () => this.nav('dashboard'),
+      gotoRepos: () => this.nav('repos'),
+      gotoArtifact: () => this.nav('artifact'),
+      gotoUpload: () => this.nav('upload'),
+      gotoUsers: () => this.nav('users'),
+      gotoSettings: () => this.nav('settings'),
+
+      dashBorder: this.nb('dashboard'), dashBg: this.bg('dashboard'), dashColor: this.nc('dashboard'),
+      reposBorder: this.nb('repos'), reposBg: this.bg('repos'), reposColor: this.nc('repos'),
+      uploadBorder: this.nb('upload'), uploadBg: this.bg('upload'), uploadColor: this.nc('upload'),
+      usersBorder: this.nb('users'), usersBg: this.bg('users'), usersColor: this.nc('users'),
+      settingsBorder: this.nb('settings'), settingsBg: this.bg('settings'), settingsColor: this.nc('settings'),
+
+      pageTitle: this.titles[s] || '',
+
+      gradleDisplay: this.show(dt === 'gradle'),
+      mavenDisplay:  this.show(dt === 'maven'),
+      setTabGradle: () => this.setState({ detailTab: 'gradle' }),
+      setTabMaven:  () => this.setState({ detailTab: 'maven' }),
+      tabGradleLine:  dt === 'gradle' ? '#C9A227' : 'transparent',
+      tabGradleColor: dt === 'gradle' ? '#C9A227' : '#5a4210',
+      tabMavenLine:   dt === 'maven'  ? '#C9A227' : 'transparent',
+      tabMavenColor:  dt === 'maven'  ? '#C9A227' : '#5a4210',
+      copyGradle: () => this.copyGradle(),
+      copyGradleLabel: this.state.copyGradleLabel,
+
+      tabUsersDisplay:  this.show(ut === 'users'),
+      tabTokensDisplay: this.show(ut === 'tokens'),
+      setTabUsers:  () => this.setState({ usersTab: 'users' }),
+      setTabTokens: () => this.setState({ usersTab: 'tokens' }),
+      tabUsersLine:  ut === 'users'  ? '#C9A227' : 'transparent',
+      tabUsersColor: ut === 'users'  ? '#C9A227' : '#5a4210',
+      tabTokensLine:  ut === 'tokens' ? '#C9A227' : 'transparent',
+      tabTokensColor: ut === 'tokens' ? '#C9A227' : '#5a4210',
+    };
+  }
+}
+
+</script>
+</body>
+</html>

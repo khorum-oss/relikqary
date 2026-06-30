@@ -41,6 +41,14 @@ relikquary:
       # Central, then the Gradle Plugin Portal (consulted last, so ordinary dependency misses don't
       # incur a portal round-trip). First match wins.
       members: [releases, maven-central, gradle-plugins]
+    - name: plugins
+      kind: group
+      # Plugin-resolution endpoint for a build's pluginManagement.repositories. Portal FIRST, mirroring
+      # gradlePluginPortal()'s ordering: the Plugin Portal and Maven Central ship byte-different jars for
+      # some coordinates (e.g. org.jetbrains.kotlinx:kover-gradle-plugin), so resolving portal-first
+      # keeps artifacts identical to what gradlePluginPortal() served — verification pins still match.
+      # Use 'public' (Central-first) for ordinary dependencies; use 'plugins' for pluginManagement.
+      members: [gradle-plugins, maven-central]
   storage:
     # Storage backend: 'filesystem' (default) or 's3' (S3-compatible: AWS, DigitalOcean Spaces, MinIO).
     backend: filesystem
