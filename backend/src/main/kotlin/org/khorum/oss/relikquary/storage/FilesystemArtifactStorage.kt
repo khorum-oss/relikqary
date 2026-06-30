@@ -3,11 +3,15 @@ package org.khorum.oss.relikquary.storage
 import org.khorum.oss.relikquary.config.StorageProperties
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.Comparator
 import kotlin.io.path.name
 
@@ -114,15 +118,27 @@ class FilesystemArtifactStorage(props: StorageProperties) : ArtifactStorage {
     override fun walk(prefix: String): List<StoredObject> {
         val base = resolve(prefix)
         if (!Files.isDirectory(base)) return emptyList()
-        Files.walk(base).use { stream ->
-            return stream
-                .filter { Files.isRegularFile(it) && !it.name.startsWith(".relikquary-") }
-                .map { path ->
-                    val key = root.relativize(path).toString().replace('\\', '/')
-                    StoredObject(key, Files.size(path), Files.getLastModifiedTime(path).toInstant())
+        val results = mutableListOf<StoredObject>()
+        Files.walkFileTree(
+            base,
+            object : SimpleFileVisitor<Path>() {
+                override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    if (!path.name.startsWith(".relikquary-")) {
+                        val key = root.relativize(path).toString().replace('\\', '/')
+                        results.add(StoredObject(key, attrs.size(), attrs.lastModifiedTime().toInstant()))
+                    }
+                    return FileVisitResult.CONTINUE
                 }
-                .toList()
-        }
+
+                override fun visitFileFailed(path: Path, exc: IOException): FileVisitResult {
+                    // A concurrent publisher's in-progress temp file (or a racing delete) can vanish
+                    // between enumeration and stat; skip it rather than failing the whole walk so
+                    // concurrent publishes still converge (feature 014).
+                    return FileVisitResult.CONTINUE
+                }
+            },
+        )
+        return results
     }
 
     override fun delete(key: String): Boolean {
