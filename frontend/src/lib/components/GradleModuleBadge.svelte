@@ -6,12 +6,13 @@
 
 <style>
   .badge {
+    font-family: var(--rq-serif);
     font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    padding: 0.1rem 0.45rem;
+    letter-spacing: 0.08em;
+    padding: 0.1rem 0.5rem;
     border-radius: 999px;
     border: 1px solid currentColor;
-    color: #2b6cb0;
+    color: var(--rq-gold-soft);
   }
 </style>

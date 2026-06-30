@@ -1,0 +1,138 @@
+/*
+ * Artifact Sanctuary theme tokens (feature 016, Phase 1).
+ * The single source of truth for the "vault" palette and type treatments distilled from the design
+ * mockup (frontend/planning/Relikquary UI.dc.html). Components reference these custom properties via
+ * var(--rq-*) rather than hard-coded hex, so the look stays consistent and themeable.
+ */
+:root {
+  /* Surfaces (darkest → lightest panel) */
+  --rq-bg: #080503;
+  --rq-shell: #160e06;
+  --rq-panel: #241a0a;
+  --rq-inset: #0e0b04;
+  --rq-rail: #0e0a04;
+
+  /* Accent + text ramp (bronze → gold) */
+  --rq-gold: #c9a227;
+  --rq-gold-soft: #9a7820;
+  --rq-text: #c8a840;
+  --rq-muted: #8b6914;
+  --rq-dim: #7a5c14;
+
+  /* Lines */
+  --rq-border: #3a2810;
+  --rq-border-strong: #5a4210;
+  --rq-border-subtle: #2a1a0a;
+
+  /* States */
+  --rq-row-hover: #1e1308;
+  --rq-nav-hover: #160e04;
+  --rq-danger: #c4663a;
+  --rq-danger-bg: #1c0f06;
+
+  /* Type */
+  --rq-serif: 'Cinzel', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --rq-mono: ui-monospace, 'SF Mono', 'Menlo', 'Consolas', monospace;
+  --rq-sans: system-ui, -apple-system, sans-serif;
+
+  /* Radius */
+  --rq-radius: 2px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--rq-bg);
+  color: var(--rq-text);
+  font-family: var(--rq-sans);
+  font-size: 13px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--rq-gold);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--rq-text);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--rq-rail);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a2a10;
+  border-radius: 3px;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--rq-gold) !important;
+  outline: none;
+}
+
+/* Shared building blocks reused across screens */
+.rq-uppercase {
+  font-family: var(--rq-serif);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--rq-muted);
+}
+
+.rq-panel {
+  background: var(--rq-panel);
+  border: 1px solid var(--rq-border);
+  border-radius: var(--rq-radius);
+}
+
+.rq-input {
+  width: 100%;
+  background: var(--rq-inset);
+  border: 1px solid var(--rq-border);
+  color: var(--rq-text);
+  padding: 9px 12px;
+  font-size: 13px;
+  border-radius: var(--rq-radius);
+  font-family: var(--rq-mono);
+}
+
+.rq-btn {
+  background: var(--rq-panel);
+  border: 1px solid var(--rq-border-strong);
+  color: var(--rq-text);
+  padding: 8px 16px;
+  font-family: var(--rq-serif);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: var(--rq-radius);
+  cursor: pointer;
+}
+
+.rq-btn:hover {
+  opacity: 0.82;
+}
+
+.rq-btn-primary {
+  border-color: var(--rq-gold);
+  color: var(--rq-gold);
+}
+
+.rq-mono {
+  font-family: var(--rq-mono);
+}

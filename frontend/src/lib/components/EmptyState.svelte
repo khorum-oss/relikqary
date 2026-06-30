@@ -7,11 +7,12 @@
 
 <style>
   .empty-state {
-    color: #718096;
-    background: #fff;
-    border: 1px dashed #cbd5e0;
-    border-radius: 6px;
-    padding: 1rem;
+    color: var(--rq-muted);
+    background: var(--rq-panel);
+    border: 1px dashed var(--rq-border-strong);
+    border-radius: var(--rq-radius);
+    padding: 1.5rem;
     text-align: center;
+    font-size: 12px;
   }
 </style>

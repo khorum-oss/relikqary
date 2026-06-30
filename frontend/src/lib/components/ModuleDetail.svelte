@@ -54,13 +54,17 @@
     margin: 0.6rem 0;
   }
   .variant {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--rq-border);
+    border-radius: var(--rq-radius);
+    background: var(--rq-panel);
+    padding: 0.6rem 0.8rem;
     margin-bottom: 0.5rem;
   }
   .variant h4 {
     margin: 0 0 0.3rem;
+    font-family: var(--rq-serif);
+    color: var(--rq-gold);
+    font-size: 12px;
   }
   .attrs {
     display: grid;
@@ -70,13 +74,24 @@
     margin: 0.2rem 0;
   }
   .attrs dt {
-    color: #4a5568;
+    color: var(--rq-muted);
+    font-family: var(--rq-mono);
+  }
+  .attrs dd {
+    color: var(--rq-text);
+    font-family: var(--rq-mono);
+  }
+  .variant :global(strong) {
+    color: var(--rq-muted);
+    font-weight: 600;
   }
   ul {
     margin: 0.2rem 0;
     padding-left: 1.2rem;
+    font-family: var(--rq-mono);
+    color: var(--rq-dim);
   }
   .muted {
-    color: #718096;
+    color: var(--rq-muted);
   }
 </style>

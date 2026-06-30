@@ -1,10 +1,24 @@
 <script lang="ts">
+  import '$lib/theme/tokens.css';
+  import { page } from '$app/stores';
   import { currentUser, login, logout } from '$lib/auth.svelte';
+  import AppShell from '$lib/components/shell/AppShell.svelte';
   import LoginForm from '$lib/components/LoginForm.svelte';
+  import Sigil from '$lib/components/shell/Sigil.svelte';
 
   let { children } = $props();
   let user = $derived(currentUser());
   let showLogin = $state(false);
+
+  const titles: Array<[(p: string) => boolean, string]> = [
+    [(p) => p === '/dashboard', 'Dashboard'],
+    [(p) => p === '/' || p.startsWith('/r/'), 'Repositories'],
+    [(p) => p.startsWith('/publish'), 'Publish'],
+    [(p) => p.startsWith('/users'), 'Users & Tokens'],
+    [(p) => p.startsWith('/settings'), 'Settings'],
+  ];
+  let pathname = $derived($page.url.pathname);
+  let title = $derived(titles.find(([m]) => m(pathname))?.[1] ?? 'Repositories');
 
   function doLogin(username: string, password: string) {
     login(username, password);
@@ -12,75 +26,68 @@
   }
 </script>
 
-<header>
-  <a href="/" class="brand">Relikquary</a>
-  <div class="session">
-    {#if user}
-      <span data-testid="current-user">{user}</span>
-      <button data-testid="logout-button" onclick={logout}>Log out</button>
-    {:else}
-      <button data-testid="login-button" onclick={() => (showLogin = true)}>Log in</button>
-    {/if}
-  </div>
-</header>
+<AppShell {pathname} {title} {user} onSignIn={() => (showLogin = true)} onSignOut={logout}>
+  {@render children()}
+</AppShell>
 
 {#if showLogin}
-  <div class="login-overlay">
-    <LoginForm onSubmit={doLogin} onCancel={() => (showLogin = false)} />
+  <div class="login-screen" data-testid="login-screen">
+    <div class="grid"></div>
+    <div class="card rq-panel">
+      <div class="card-head">
+        <Sigil size={48} />
+        <div class="title">Relikquary</div>
+        <div class="subtitle">Artifact Sanctuary</div>
+      </div>
+      <LoginForm onSubmit={doLogin} onCancel={() => (showLogin = false)} title="Enter the Vault" />
+    </div>
   </div>
 {/if}
 
-<main>
-  {@render children()}
-</main>
-
 <style>
-  :global(body) {
-    margin: 0;
-    font-family: system-ui, sans-serif;
-    color: #1a202c;
-    background: #f7fafc;
-  }
-  header {
-    background: #2d3748;
-    padding: 0.75rem 1.25rem;
+  .login-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--rq-bg);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
-  .brand {
-    color: #fff;
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, #c9a22710 0.5px, transparent 0.5px);
+    background-size: 22px 22px;
+    pointer-events: none;
+  }
+  .card {
+    position: relative;
+    width: 390px;
+    background: var(--rq-shell);
+    border-color: var(--rq-border-strong);
+  }
+  .card-head {
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--rq-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .title {
+    font-family: var(--rq-serif);
+    font-size: 22px;
     font-weight: 700;
-    text-decoration: none;
-    font-size: 1.1rem;
+    color: var(--rq-gold);
+    letter-spacing: 3px;
   }
-  .session {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    color: #e2e8f0;
-    font-size: 0.9rem;
-  }
-  .session button {
-    background: #4a5568;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.3rem 0.7rem;
-    cursor: pointer;
-    font: inherit;
-  }
-  .login-overlay {
-    max-width: 900px;
-    margin: 1rem auto 0;
-    padding: 0 1.25rem;
-  }
-  main {
-    max-width: 900px;
-    margin: 1.5rem auto;
-    padding: 0 1.25rem;
-  }
-  :global(a) {
-    color: #3182ce;
+  .subtitle {
+    font-family: var(--rq-serif);
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    color: var(--rq-muted);
+    text-transform: uppercase;
   }
 </style>

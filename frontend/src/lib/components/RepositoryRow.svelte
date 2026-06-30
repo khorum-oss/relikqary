@@ -1,7 +1,7 @@
 <script lang="ts">
   import KindBadge from './KindBadge.svelte';
   import type { RepositorySummary } from '$lib/api';
-  // One repository in the list: a link to browse it plus its kind badge (feature 008).
+  // One repository in the list: a link to browse it plus its kind badge (feature 008; restyled 016).
   let { repo }: { repo: RepositorySummary } = $props();
 </script>
 
@@ -15,22 +15,30 @@
 
 <style>
   .row {
-    padding: 0.6rem 0.8rem;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
+    padding: 12px 18px;
+    background: var(--rq-panel);
+    border: 1px solid var(--rq-border);
+    border-radius: var(--rq-radius);
+    margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
+  .row:hover {
+    background: var(--rq-row-hover);
+  }
+  .row a {
+    font-family: var(--rq-mono);
+    font-size: 13px;
+    color: var(--rq-gold);
+  }
   .meta {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.7rem;
   }
   .type {
-    color: #718096;
+    color: var(--rq-dim);
     font-size: 0.8rem;
   }
 </style>

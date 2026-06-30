@@ -47,46 +47,61 @@
 
 <style>
   .snippets {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 0.6rem;
+    border: 1px solid var(--rq-border);
+    border-radius: var(--rq-radius);
+    background: var(--rq-panel);
+    padding: 0.7rem;
     margin: 0.6rem 0;
+    position: relative;
   }
   .tabs {
     display: flex;
     gap: 0.3rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
   }
   .tabs button {
-    font: inherit;
-    font-size: 0.8rem;
-    padding: 0.2rem 0.6rem;
-    border: 1px solid #cbd5e0;
-    border-radius: 4px;
-    background: #f7fafc;
+    font-family: var(--rq-serif);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--rq-border);
+    border-radius: var(--rq-radius);
+    background: var(--rq-inset);
+    color: var(--rq-dim);
     cursor: pointer;
   }
   .tabs button.active {
-    background: #3182ce;
-    color: #fff;
-    border-color: #3182ce;
+    background: var(--rq-panel);
+    color: var(--rq-gold);
+    border-color: var(--rq-gold);
   }
   pre {
-    background: #1a202c;
-    color: #e2e8f0;
-    padding: 0.6rem;
-    border-radius: 4px;
+    background: var(--rq-inset);
+    color: var(--rq-text);
+    border: 1px solid var(--rq-border-subtle);
+    padding: 0.8rem;
+    border-radius: var(--rq-radius);
     overflow-x: auto;
-    font-size: 0.8rem;
+    font-family: var(--rq-mono);
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0;
   }
   .copy {
-    font: inherit;
-    font-size: 0.8rem;
-    padding: 0.2rem 0.6rem;
-    border: none;
-    border-radius: 4px;
-    background: #3182ce;
-    color: #fff;
+    position: absolute;
+    top: 0.7rem;
+    right: 0.7rem;
+    font-family: var(--rq-serif);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--rq-border-strong);
+    border-radius: var(--rq-radius);
+    background: var(--rq-panel);
+    color: var(--rq-muted);
     cursor: pointer;
+  }
+  .copy:hover {
+    color: var(--rq-gold);
   }
 </style>

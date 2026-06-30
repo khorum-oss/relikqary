@@ -1,6 +1,7 @@
 <script lang="ts">
-  // Login form (feature 008). Captures username/password and calls onSubmit; the parent validates
-  // lazily (a repeated 401 ⇒ invalid) and passes `error` back to display.
+  // Login form (feature 008; restyled feature 016). Captures username/password and calls onSubmit; the
+  // parent validates lazily (a repeated 401 ⇒ invalid) and passes `error` back to display. Borderless:
+  // callers wrap it in a panel (the full-screen vault card, or the in-context prompt).
   let {
     onSubmit,
     onCancel,
@@ -29,61 +30,66 @@
   {/if}
   <label>
     Username
-    <input data-testid="login-username" bind:value={username} autocomplete="username" />
+    <input
+      class="rq-input"
+      data-testid="login-username"
+      bind:value={username}
+      placeholder="admin"
+      autocomplete="username"
+    />
   </label>
   <label>
     Password
-    <input data-testid="login-password" type="password" bind:value={password} autocomplete="current-password" />
+    <input
+      class="rq-input"
+      data-testid="login-password"
+      type="password"
+      bind:value={password}
+      placeholder="••••••••"
+      autocomplete="current-password"
+    />
   </label>
   <div class="actions">
-    <button type="submit" data-testid="login-submit">Log in</button>
+    <button type="submit" class="rq-btn rq-btn-primary submit" data-testid="login-submit">{title}</button>
     {#if onCancel}
-      <button type="button" class="secondary" onclick={onCancel}>Cancel</button>
+      <button type="button" class="rq-btn" onclick={onCancel}>Cancel</button>
     {/if}
   </div>
 </form>
 
 <style>
   .login {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 1rem;
-    max-width: 22rem;
+    padding: 26px 30px;
     display: grid;
-    gap: 0.6rem;
+    gap: 14px;
+  }
+  h3 {
+    margin: 0;
+    font-family: var(--rq-serif);
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: var(--rq-gold);
   }
   label {
     display: grid;
-    gap: 0.2rem;
-    font-size: 0.85rem;
-    color: #4a5568;
-  }
-  input {
-    padding: 0.4rem 0.5rem;
-    border: 1px solid #cbd5e0;
-    border-radius: 4px;
-    font: inherit;
+    gap: 6px;
+    font-family: var(--rq-serif);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--rq-dim);
   }
   .actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
+    margin-top: 4px;
   }
-  button {
-    background: #3182ce;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.4rem 0.9rem;
-    cursor: pointer;
-    font: inherit;
-  }
-  button.secondary {
-    background: #edf2f7;
-    color: #2d3748;
+  .submit {
+    flex: 1;
   }
   .error {
-    color: #c53030;
     margin: 0;
+    color: var(--rq-danger);
+    font-size: 12px;
   }
 </style>

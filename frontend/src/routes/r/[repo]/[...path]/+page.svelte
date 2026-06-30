@@ -172,8 +172,10 @@
 <Breadcrumbs {repo} {path} />
 
 {#if needLogin}
-  <LoginForm onSubmit={onLogin} onCancel={() => (needLogin = false)} error={loginError}
-    title="Log in to continue" />
+  <div class="login-inline rq-panel">
+    <LoginForm onSubmit={onLogin} onCancel={() => (needLogin = false)} error={loginError}
+      title="Log in to continue" />
+  </div>
 {/if}
 
 {#if forbidden}
@@ -223,38 +225,55 @@
 {/if}
 
 <style>
+  .login-inline {
+    max-width: 24rem;
+    margin-bottom: 1rem;
+  }
   .toolbar {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 0.6rem;
   }
   .toolbar button {
-    background: #3182ce;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.35rem 0.8rem;
+    background: var(--rq-panel);
+    color: var(--rq-text);
+    border: 1px solid var(--rq-border-strong);
+    border-radius: var(--rq-radius);
+    padding: 0.4rem 0.9rem;
     cursor: pointer;
-    font: inherit;
+    font-family: var(--rq-serif);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .toolbar button:hover {
+    opacity: 0.82;
   }
   .coordinate {
     margin-top: 1rem;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 0.8rem;
+    border-top: 1px solid var(--rq-border);
+    padding-top: 0.9rem;
   }
   .coordinate-head {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
+    font-family: var(--rq-mono);
+    color: var(--rq-gold);
   }
   .view-module {
-    font: inherit;
-    font-size: 0.85rem;
-    padding: 0.25rem 0.7rem;
-    border: 1px solid #cbd5e0;
-    border-radius: 4px;
-    background: #f7fafc;
+    font-family: var(--rq-serif);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--rq-border-strong);
+    border-radius: var(--rq-radius);
+    background: var(--rq-panel);
+    color: var(--rq-muted);
     cursor: pointer;
+  }
+  .view-module:hover {
+    color: var(--rq-gold);
   }
 </style>

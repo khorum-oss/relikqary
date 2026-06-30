@@ -1,15 +1,15 @@
 <script lang="ts">
   import type { FileDetails } from '$lib/api';
-  // File details + a Download action (feature 005/008). Download is delegated so the parent can fetch
-  // with credentials and save a Blob (private repos).
+  // File details + a Download action (feature 005/008; restyled 016). Download is delegated so the
+  // parent can fetch with credentials and save a Blob (private repos).
   let { details, onDownload }: { details: FileDetails; onDownload: () => void } = $props();
 </script>
 
-<aside class="details" data-testid="details">
+<aside class="details rq-panel" data-testid="details">
   <h3>{details.path.split('/').pop()}</h3>
   <dl>
     <dt>Path</dt>
-    <dd>{details.repository}/{details.path}</dd>
+    <dd class="mono">{details.repository}/{details.path}</dd>
     <dt>Size</dt>
     <dd>{details.size} bytes</dd>
     {#if details.lastModified}
@@ -21,38 +21,42 @@
       <dd class="mono">{value}</dd>
     {/each}
   </dl>
-  <button class="button" onclick={onDownload} data-testid="download">Download</button>
+  <button class="rq-btn rq-btn-primary" onclick={onDownload} data-testid="download">Download</button>
 </aside>
 
 <style>
   .details {
     margin-top: 1.25rem;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 1rem;
+    padding: 18px;
+    border-top: 2px solid var(--rq-gold);
   }
-  .details dl {
+  h3 {
+    margin: 0 0 0.75rem;
+    font-family: var(--rq-serif);
+    font-size: 14px;
+    color: var(--rq-gold);
+  }
+  dl {
     display: grid;
     grid-template-columns: 7rem 1fr;
-    gap: 0.25rem 0.75rem;
+    gap: 0.3rem 0.75rem;
+    margin: 0 0 0.9rem;
   }
-  .details dt {
-    color: #718096;
+  dt {
+    font-family: var(--rq-serif);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--rq-muted);
+  }
+  dd {
+    margin: 0;
+    color: var(--rq-text);
+    font-size: 12px;
   }
   .mono {
-    font-family: monospace;
+    font-family: var(--rq-mono);
     word-break: break-all;
-  }
-  .button {
-    display: inline-block;
-    margin-top: 0.75rem;
-    background: #3182ce;
-    color: #fff;
-    border: none;
-    padding: 0.4rem 0.9rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font: inherit;
+    color: var(--rq-dim);
   }
 </style>
