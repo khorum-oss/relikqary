@@ -4,9 +4,11 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.servlet.http.HttpServletRequest
 import org.khorum.oss.relikquary.config.RepositoryProperties
 import org.khorum.oss.relikquary.coordinate.InvalidRepositoryPathException
+import org.khorum.oss.relikquary.coordinate.PathKind
 import org.khorum.oss.relikquary.coordinate.RepositoryPath
 import org.khorum.oss.relikquary.ingestion.PublishDecision
 import org.khorum.oss.relikquary.ingestion.RepublishPolicy
+import org.khorum.oss.relikquary.metadata.HostedMetadataService
 import org.khorum.oss.relikquary.observability.metrics.RepositoryMetrics
 import org.khorum.oss.relikquary.repository.RepositoryKind
 import org.khorum.oss.relikquary.repository.RepositoryNotFoundException
@@ -29,6 +31,8 @@ import java.nio.charset.StandardCharsets
 
 private val logger = KotlinLogging.logger {}
 
+private const val METADATA_FILE = "maven-metadata.xml"
+
 /**
  * Serves named repositories (feature 004, contracts/named-repositories.md). The first path segment is
  * the repository name; the remainder is the Maven-layout artifact path. Storage keys are namespaced as
@@ -42,6 +46,7 @@ class RepositoryController(
     private val registry: RepositoryRegistry,
     private val resolver: RepositoryResolver,
     private val metrics: RepositoryMetrics,
+    private val metadataService: HostedMetadataService,
 ) {
 
     @PutMapping("/**")
@@ -52,6 +57,11 @@ class RepositoryController(
             metrics.recordPublish(target.repo.name, "rejected")
             return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .header(HttpHeaders.ALLOW, "GET", "HEAD").build()
+        }
+        // The server is authoritative for hosted maven-metadata.xml (feature 014): a client's uploaded
+        // metadata (which reflects only its local view) is accepted but not stored — the server generates it.
+        if (target.path.classify() == PathKind.METADATA) {
+            return acceptHostedMetadata(target, request)
         }
         val exists = storage.exists(target.key)
         return when (republishPolicy.evaluate(target.repo.type, target.path, exists)) {
@@ -68,15 +78,42 @@ class RepositoryController(
             PublishDecision.ACCEPT -> {
                 val written = storage.write(target.key, request.inputStream)
                 logger.info { "Stored ${target.key} ($written bytes)" }
+                // Rebuild the artifact-level (and snapshot) metadata from what is now stored, so an
+                // independent publisher's later metadata upload never clobbers the true version set.
+                metadataService.regenerate(target.repo, target.path)
                 metrics.recordPublish(target.repo.name, "accepted")
                 ResponseEntity.status(if (exists) HttpStatus.OK else HttpStatus.CREATED).build()
             }
         }
     }
 
+    /**
+     * Accepts a client's upload of a hosted `maven-metadata.xml` (or its checksum sibling) without storing
+     * it — the server owns hosted metadata. The body is drained so the publish succeeds; on the metadata
+     * file itself the authoritative copy is (re)generated. Coordinate publishes already keep it current.
+     */
+    private fun acceptHostedMetadata(target: Target, request: HttpServletRequest): ResponseEntity<Void> {
+        request.inputStream.use { it.readBytes() }
+        if (target.path.fileName == METADATA_FILE) {
+            metadataService.ensureForRead(target.repo, target.path)
+        }
+        metrics.recordPublish(target.repo.name, "accepted")
+        // The upload is accepted; the served metadata is the server's authoritative copy.
+        return ResponseEntity.status(HttpStatus.CREATED).build()
+    }
+
     @GetMapping("/**")
     fun resolve(request: HttpServletRequest): ResponseEntity<InputStreamResource> {
         val target = target(request)
+        // Compute-on-read fallback (feature 014): if a hosted maven-metadata.xml (or its checksum) is not
+        // present, build it authoritatively from stored versions before resolving. Hosted only — proxy
+        // metadata stays pass-through.
+        if (target.repo.kind == RepositoryKind.HOSTED &&
+            target.path.fileName.startsWith(METADATA_FILE) &&
+            !storage.exists(target.key)
+        ) {
+            metadataService.ensureForRead(target.repo, target.path)
+        }
         return when (val resolution = resolver.resolve(target.repo.name, target.path)) {
             is Resolution.Hit -> {
                 metrics.recordResolve(target.repo.name, "hit")

@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.khorum.oss.relikquary.config.RepositoryProperties
 import org.khorum.oss.relikquary.config.RepositoryProperties.CacheEviction
 import org.khorum.oss.relikquary.config.RepositoryProperties.SnapshotRetention
+import org.khorum.oss.relikquary.metadata.SnapshotBuild
 import org.khorum.oss.relikquary.observability.metrics.CleanupMetricsRecorder
 import org.khorum.oss.relikquary.protocol.dto.CleanupReport
 import org.khorum.oss.relikquary.protocol.dto.RepoCleanupResult
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 private val logger = KotlinLogging.logger {}
 
@@ -66,9 +66,6 @@ class CleanupService(
     }
 
     companion object {
-        private val BUILD_TOKEN = Regex("""(\d{8}\.\d{6})-(\d+)""")
-        private val TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss")
-
         /**
          * Selects the snapshot-build files to delete: within each `-SNAPSHOT` version directory, files are
          * grouped by Maven timestamp/build-number into builds; builds beyond [SnapshotRetention.keepLast]
@@ -117,8 +114,8 @@ class CleanupService(
             if (!versionDir.substringAfterLast('/').endsWith("-SNAPSHOT")) return null
             val fileName = obj.key.substringAfterLast('/')
             if (fileName.startsWith("maven-metadata.xml")) return null
-            val match = BUILD_TOKEN.find(fileName) ?: return null
-            val ts = LocalDateTime.parse(match.groupValues[1], TIMESTAMP_FORMAT).toInstant(ZoneOffset.UTC)
+            val match = SnapshotBuild.TOKEN.find(fileName) ?: return null
+            val ts = LocalDateTime.parse(match.groupValues[1], SnapshotBuild.TIMESTAMP_FORMAT).toInstant(ZoneOffset.UTC)
             return Triple(versionDir, match.value, ts)
         }
 
