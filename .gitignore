@@ -5,6 +5,11 @@
 .kotlin/**
 relikquary-store**/
 
+# Embedded SQLite database (default persistence backend, feature 016)
+relikquary.db
+relikquary.db-*
+*.sqlite
+
 **/.gradle/**
 node_modules/**
 

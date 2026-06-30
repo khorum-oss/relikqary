@@ -11,6 +11,9 @@ mockk = "1.13.17"
 awsSdk = "2.46.17"
 s3mock = "5.1.0"
 testcontainers = "1.21.4"
+sqliteJdbc = "3.53.2.0"
+# Matches the hibernate-core version managed by the Spring Boot 4.1 BOM (provides the SQLite dialect).
+hibernate = "7.4.1.Final"
 
 [libraries]
 # Kotlin
@@ -31,10 +34,18 @@ jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-
 # Logging
 kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 
+# Persistence (feature 016, Phase 3) — JPA + an operator-selectable backend (embedded SQLite default,
+# optional external PostgreSQL). Hibernate generates portable schema per dialect (ddl-auto).
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+postgresql = { module = "org.postgresql:postgresql" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqliteJdbc" }
+hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version.ref = "hibernate" }
+
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-minio = { module = "org.testcontainers:minio", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 # s3mock-exec (runnable jar) is consumed via a dedicated configuration in backend/build.gradle.kts
 
 [plugins]

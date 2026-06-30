@@ -1,4 +1,19 @@
 relikquary:
+  # Persistence backend for application state — API tokens, managed users, publish history, runtime
+  # settings (feature 016, Phase 3). Artifact bytes are NOT stored here; they stay in 'storage' below.
+  #   - sqlite (default): an embedded, file-backed database needing no external service.
+  #   - postgres: an external PostgreSQL for shared / HA deployments.
+  # Hibernate generates the schema per dialect (ddl-auto, default 'update'). Any spring.datasource.* /
+  # spring.jpa.* key may still be set directly to override these derived defaults.
+  persistence:
+    backend: ${RELIKQUARY_PERSISTENCE_BACKEND:sqlite}
+    sqlite:
+      path: ${RELIKQUARY_DB_PATH:relikquary.db}
+    # postgres:
+    #   url: ${RELIKQUARY_DB_URL:}            # e.g. jdbc:postgresql://db:5432/relikquary
+    #   username: ${RELIKQUARY_DB_USER:}
+    #   password: ${RELIKQUARY_DB_PASSWORD:}
+
   # Named repositories, each addressed by a path prefix (/{repo}/...). There is no implicit
   # repository at the root. A repository's kind selects how it resolves:
   #   - hosted (default): stores artifacts locally; 'type' governs acceptance/mutability —
@@ -147,6 +162,9 @@ spring:
     multipart:
       # Artifacts are streamed as raw request bodies, not multipart form uploads.
       enabled: false
+  jpa:
+    # No open-session-in-view: persistence access is confined to the service/repository layer.
+    open-in-view: false
 
 logging:
   level:
