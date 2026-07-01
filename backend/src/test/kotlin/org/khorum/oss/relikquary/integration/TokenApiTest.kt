@@ -44,10 +44,16 @@ class TokenApiTest {
         @JvmStatic
         lateinit var storageRoot: Path
 
+        @TempDir
+        @JvmStatic
+        lateinit var dbDir: Path
+
         @DynamicPropertySource
         @JvmStatic
         fun storageProps(registry: DynamicPropertyRegistry) {
             registry.add("relikquary.storage.filesystem.root") { storageRoot.toString() }
+            // Isolate the app-state DB per run so tokens don't accumulate in the shared build DB.
+            registry.add("relikquary.persistence.sqlite.path") { dbDir.resolve("rq.db").toString() }
         }
     }
 

@@ -2,6 +2,7 @@ package org.khorum.oss.relikquary.config
 
 import jakarta.servlet.http.HttpServletResponse
 import org.khorum.oss.relikquary.security.ApiTokenAuthenticationProvider
+import org.khorum.oss.relikquary.security.ManagedUserService
 import org.khorum.oss.relikquary.security.RepositoryAuthorizationManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -11,6 +12,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.User
+import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.factory.PasswordEncoderFactories
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -34,16 +36,26 @@ class SecurityConfig(
     @Bean
     fun passwordEncoder(): PasswordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
 
+    /**
+     * Config users first, managed (DB) users second (feature 016, US8). A username defined in config
+     * always wins, so introducing managed accounts never locks a config user out.
+     */
     @Bean
     @Suppress("SpreadOperator")
-    fun userDetailsService(): UserDetailsService {
-        val users = properties.users.map { user ->
-            User.withUsername(user.username)
-                .password(user.password)
-                .roles(*user.roles.toTypedArray())
-                .build()
+    fun userDetailsService(managedUsers: ManagedUserService): UserDetailsService {
+        val configUsers = InMemoryUserDetailsManager(
+            properties.users.map { user ->
+                User.withUsername(user.username)
+                    .password(user.password)
+                    .roles(*user.roles.toTypedArray())
+                    .build()
+            },
+        )
+        return UserDetailsService { username ->
+            runCatching { configUsers.loadUserByUsername(username) }.getOrNull()
+                ?: managedUsers.loadUserDetails(username)
+                ?: throw UsernameNotFoundException(username)
         }
-        return InMemoryUserDetailsManager(users)
     }
 
     /**

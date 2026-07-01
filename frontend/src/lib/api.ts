@@ -155,8 +155,47 @@ export interface CreatedToken {
   secret: string;
 }
 
+/** A managed user account (feature 016, Phase 3). Never carries the password. */
+export interface UserSummary {
+  id: string;
+  username: string;
+  email?: string | null;
+  roles: string[];
+  lastActiveAt?: string | null;
+  createdAt: string;
+}
+
 export function listRepositories(): Promise<RepositorySummary[]> {
   return getJson('/api/repositories');
+}
+
+/** Lists managed users (admin; requires the PUBLISH role). */
+export function listUsers(): Promise<UserSummary[]> {
+  return getJson('/api/admin/users');
+}
+
+/** Creates a managed user. `roles` are role names (e.g. ["PUBLISH"]). Throws [ApiError] on failure. */
+export async function createUser(
+  username: string,
+  email: string,
+  password: string,
+  roles: string[],
+): Promise<void> {
+  const res = await fetch(
+    '/api/admin/users',
+    authed({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email: email || null, password, roles }),
+    }),
+  );
+  if (!res.ok) throw new ApiError(res.status);
+}
+
+/** Deletes a managed user by id. Throws [ApiError] on failure. */
+export async function deleteUser(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/users/${id}`, authed({ method: 'DELETE' }));
+  if (!res.ok) throw new ApiError(res.status);
 }
 
 /** Lists all API tokens (admin; requires the PUBLISH role). */

@@ -16,8 +16,9 @@ test('admin signs in and manages an API token', async ({ page }) => {
   await page.getByTestId('login-submit').click();
   await expect(page.getByTestId('current-user')).toHaveText('alice');
 
-  // Open Users & Tokens (API Tokens is the default tab).
+  // Open Users & Tokens, then the API Tokens tab.
   await page.getByRole('link', { name: 'Users & Tokens', exact: true }).click();
+  await page.getByTestId('tab-tokens').click();
   await expect(page.getByTestId('tokens-panel')).toBeVisible();
 
   // Mint a publish-scoped token.
