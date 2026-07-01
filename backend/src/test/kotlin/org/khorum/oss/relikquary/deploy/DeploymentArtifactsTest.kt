@@ -47,6 +47,9 @@ class DeploymentArtifactsTest {
         assertTrue(text.contains("\${RELIKQUARY_BACKEND}")) { "template must proxy to \${RELIKQUARY_BACKEND}" }
         assertTrue(text.contains("proxy_pass")) { "template must reverse-proxy to the backend" }
         assertTrue(text.contains("/index.html")) { "template must fall back to the SPA shell" }
+        assertTrue(text.contains("dashboard|publish|users|settings")) {
+            "template must serve the top-level SPA sections as app-shell fallbacks, not proxy them (feature 016)"
+        }
     }
 
     @Test

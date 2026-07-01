@@ -7,11 +7,13 @@
 # ---- build stage ----
 FROM node:22 AS build
 WORKDIR /app
+# Set BEFORE `npm ci`: @playwright/test's postinstall would otherwise download ~150MB of browsers during
+# install (unused at build time) and can hang/fail the image build. Mirrors the CI frontend job.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
 # Standalone UI served at the root (BASE_PATH unset). The combined image, by contrast, serves under /ui.
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 RUN npm run build
 
 # ---- runtime stage (non-root nginx, listens on 8080) ----
