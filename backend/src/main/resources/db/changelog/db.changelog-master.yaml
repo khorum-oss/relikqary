@@ -1,0 +1,10 @@
+# Liquibase master changelog (feature 016) — the source of truth for the application-state schema
+# (tokens, users, settings, and later publish history). Placed at Liquibase's DEFAULT location so it is
+# discovered even when the bundled application.yml is replaced (e.g. the e2e backend passes its own
+# --spring.config.location). Liquibase runs on startup for both SQLite and PostgreSQL; Hibernate no
+# longer manages the schema (ddl-auto = none). Add new changesets in numbered files and include them
+# below; never edit an applied changeset.
+databaseChangeLog:
+  - include:
+      file: 001-initial-schema.xml
+      relativeToChangelogFile: true

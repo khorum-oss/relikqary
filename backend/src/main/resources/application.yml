@@ -3,8 +3,8 @@ relikquary:
   # settings (feature 016, Phase 3). Artifact bytes are NOT stored here; they stay in 'storage' below.
   #   - sqlite (default): an embedded, file-backed database needing no external service.
   #   - postgres: an external PostgreSQL for shared / HA deployments.
-  # Hibernate generates the schema per dialect (ddl-auto, default 'update'). Any spring.datasource.* /
-  # spring.jpa.* key may still be set directly to override these derived defaults.
+  # Liquibase manages the schema (db/changelog) on both engines; Hibernate does not (ddl-auto=none). Any
+  # spring.datasource.* / spring.jpa.* key may still be set directly to override the derived defaults.
   persistence:
     backend: ${RELIKQUARY_PERSISTENCE_BACKEND:sqlite}
     sqlite:
@@ -166,6 +166,11 @@ spring:
   jpa:
     # No open-session-in-view: persistence access is confined to the service/repository layer.
     open-in-view: false
+  liquibase:
+    # Liquibase owns the application-state schema (feature 016); it runs on startup for both SQLite and
+    # PostgreSQL. Hibernate does not manage the schema (relikquary.persistence.ddl-auto defaults to none).
+    # The changelog is at Liquibase's default path, so it is also found when this file is not loaded.
+    change-log: classpath:db/changelog/db.changelog-master.yaml
 
 logging:
   level:

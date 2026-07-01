@@ -20,6 +20,7 @@ echo "Starting backend (auth on, store=$STORE)..."
 java -jar "$JAR" \
   --spring.config.location="file:$CONFIG" \
   --relikquary.storage.filesystem.root="$STORE" \
+  --relikquary.persistence.sqlite.path="$STORE/relikquary.db" \
   >/tmp/relikquary-e2e-backend.log 2>&1 &
 BPID=$!
 trap 'kill "$BPID" 2>/dev/null || true' EXIT

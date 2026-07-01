@@ -35,6 +35,8 @@ dependencies {
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.liquibase)
+    implementation(libs.liquibase.core)
     implementation(libs.micrometer.registry.prometheus)
     implementation(libs.aws.s3)
     implementation(libs.jackson.module.kotlin)

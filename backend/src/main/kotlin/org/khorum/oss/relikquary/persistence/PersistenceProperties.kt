@@ -9,15 +9,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  *  - [Backend.SQLITE] (default): an embedded, file-backed database, no external service.
  *  - [Backend.POSTGRES]: an external PostgreSQL for shared / HA deployments.
  *
- * Hibernate generates the schema per dialect via [ddlAuto], so one set of entity mappings is portable
- * across both engines.
+ * The schema is managed by Liquibase (see db/changelog), so Hibernate does not touch it — [ddlAuto]
+ * defaults to `none`. Override only if you disable Liquibase and want Hibernate to manage the schema.
  */
 @ConfigurationProperties("relikquary.persistence")
 data class PersistenceProperties(
     val backend: Backend = Backend.SQLITE,
     val sqlite: Sqlite = Sqlite(),
     val postgres: Postgres = Postgres(),
-    val ddlAuto: String = "update",
+    val ddlAuto: String = "none",
 ) {
     enum class Backend { SQLITE, POSTGRES }
 

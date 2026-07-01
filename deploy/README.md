@@ -161,7 +161,7 @@ docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.postgres.ym
                --env-file deploy/.env up -d --build
 ```
 
-This adds a `postgres` service; the backend waits for it to be healthy and Hibernate creates the schema on
+This adds a `postgres` service; the backend waits for it to be healthy and Liquibase creates the schema on
 first boot. Artifact storage is unaffected — choosing PostgreSQL here does not change where artifacts live.
 
 ## Deploy to Kubernetes

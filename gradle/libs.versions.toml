@@ -37,6 +37,9 @@ kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = 
 # Persistence (feature 016, Phase 3) — JPA + an operator-selectable backend (embedded SQLite default,
 # optional external PostgreSQL). Hibernate generates portable schema per dialect (ddl-auto).
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+# Boot 4 modularizes auto-config: this module provides LiquibaseAutoConfiguration (+ liquibase-core).
+spring-boot-liquibase = { module = "org.springframework.boot:spring-boot-liquibase" }
+liquibase-core = { module = "org.liquibase:liquibase-core" }
 postgresql = { module = "org.postgresql:postgresql" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqliteJdbc" }
 hibernate-community-dialects = { module = "org.hibernate.orm:hibernate-community-dialects", version.ref = "hibernate" }

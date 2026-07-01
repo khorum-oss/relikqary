@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Initial application-state schema (feature 016, Phase 3): settings, API tokens, managed users. -->
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="001-setting" author="relikquary">
+        <createTable tableName="setting">
+            <column name="setting_key" type="VARCHAR(200)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(4000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(200)"/>
+        </createTable>
+        <!-- Liquibase maps TIMESTAMP to TEXT on SQLite, but Hibernate + sqlite-jdbc round-trip a
+             `timestamp` column (what ddl-auto produced). Restore that type so reads parse. -->
+        <modifySql dbms="sqlite">
+            <replace replace="TEXT" with="timestamp"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="002-api-token" author="relikquary">
+        <createTable tableName="api_token">
+            <column name="id" type="VARCHAR(40)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_username" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="secret_hash" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="scope" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_used_at" type="TIMESTAMP"/>
+            <column name="revoked_at" type="TIMESTAMP"/>
+        </createTable>
+        <modifySql dbms="sqlite">
+            <replace replace="TEXT" with="timestamp"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="003-managed-user" author="relikquary">
+        <createTable tableName="managed_user">
+            <column name="id" type="VARCHAR(40)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(200)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="email" type="VARCHAR(200)"/>
+            <column name="password_hash" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="roles" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_active_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <modifySql dbms="sqlite">
+            <replace replace="TEXT" with="timestamp"/>
+        </modifySql>
+    </changeSet>
+</databaseChangeLog>
