@@ -39,6 +39,9 @@ class ProxyEvictionTest {
     private val http: HttpClient = HttpClient.newHttpClient()
 
     companion object {
+        private const val AWAIT_ATTEMPTS = 100
+        private const val AWAIT_INTERVAL_MS = 20L
+
         private val stub = StubUpstream().start()
 
         @TempDir
@@ -61,13 +64,26 @@ class ProxyEvictionTest {
             HttpResponse.BodyHandlers.discarding(),
         ).statusCode()
 
+    /**
+     * The proxy caches by teeing the served stream (feature 015); the cache entry commits when that
+     * stream closes on the server, which can lag the client's response. Poll briefly so the existence
+     * assertion isn't racy.
+     */
+    private fun awaitExists(key: String): Boolean {
+        repeat(AWAIT_ATTEMPTS) {
+            if (storage.exists(key)) return true
+            Thread.sleep(AWAIT_INTERVAL_MS)
+        }
+        return storage.exists(key)
+    }
+
     @Test
     fun `eviction removes cached artifacts and a later request re-fetches`() {
         stub.seed(coord, "upstream-bytes".toByteArray())
 
         // Resolve through the proxy ⇒ cached locally.
         assertEquals(200, get("/cacheproxy/$coord"))
-        assertTrue(storage.exists("cacheproxy/$coord"))
+        assertTrue(awaitExists("cacheproxy/$coord"))
 
         // Cleanup with maxAge=PT0S evicts everything cached before now.
         val report = cleanup.run(dryRun = false)
@@ -76,6 +92,6 @@ class ProxyEvictionTest {
 
         // A later request transparently re-fetches and re-caches (FR-005).
         assertEquals(200, get("/cacheproxy/$coord"))
-        assertTrue(storage.exists("cacheproxy/$coord"))
+        assertTrue(awaitExists("cacheproxy/$coord"))
     }
 }
