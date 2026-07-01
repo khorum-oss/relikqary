@@ -1,9 +1,13 @@
 package org.khorum.oss.relikquary.config
 
 import jakarta.servlet.http.HttpServletResponse
+import org.khorum.oss.relikquary.security.ApiTokenAuthenticationProvider
 import org.khorum.oss.relikquary.security.RepositoryAuthorizationManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.ProviderManager
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.User
@@ -42,10 +46,26 @@ class SecurityConfig(
         return InMemoryUserDetailsManager(users)
     }
 
+    /**
+     * Authenticate API tokens (presented as the Basic password) before configured users: the token
+     * provider handles `rlq_…` credentials and passes everything else through to the user provider.
+     */
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun authenticationManager(
+        userDetailsService: UserDetailsService,
+        passwordEncoder: PasswordEncoder,
+        tokenProvider: ApiTokenAuthenticationProvider,
+    ): AuthenticationManager {
+        val dao = DaoAuthenticationProvider(userDetailsService)
+        dao.setPasswordEncoder(passwordEncoder)
+        return ProviderManager(tokenProvider, dao)
+    }
+
+    @Bean
+    fun securityFilterChain(http: HttpSecurity, authenticationManager: AuthenticationManager): SecurityFilterChain {
         http.csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .authenticationManager(authenticationManager)
         if (properties.enabled) {
             http.authorizeHttpRequests { auth ->
                 // Orchestrator probes stay open; every other operational endpoint (detailed health,

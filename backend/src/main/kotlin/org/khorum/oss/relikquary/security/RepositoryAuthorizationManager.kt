@@ -37,7 +37,8 @@ class RepositoryAuthorizationManager(
         authentication: Supplier<out Authentication?>,
         context: RequestAuthorizationContext,
     ): AuthorizationDecision {
-        if (decodedPath(context.request) == MANAGEMENT_CLEANUP) {
+        val path = decodedPath(context.request)
+        if (path == MANAGEMENT_CLEANUP || path.startsWith(MANAGEMENT_ADMIN_PREFIX)) {
             return AuthorizationDecision(authorizer.permitsManagement(authentication.get()))
         }
         val target = target(context.request) ?: return GRANT
@@ -96,5 +97,8 @@ class RepositoryAuthorizationManager(
 
         /** Non-repo-scoped management endpoint requiring the global PUBLISH authority (feature 009). */
         const val MANAGEMENT_CLEANUP = "api/cleanup"
+
+        /** Admin surface (tokens, and later users/settings) — global PUBLISH authority (feature 016). */
+        const val MANAGEMENT_ADMIN_PREFIX = "api/admin"
     }
 }
