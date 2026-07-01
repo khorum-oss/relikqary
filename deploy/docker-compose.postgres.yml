@@ -1,0 +1,42 @@
+# PostgreSQL overlay for Relikquary (feature 016). Layer this on top of docker-compose.yml to store
+# application state — API tokens, managed users, settings, publish history — in PostgreSQL instead of the
+# default embedded SQLite. Artifact storage is unchanged (filesystem volume, or the S3 block in the base).
+#
+#   cp deploy/.env.example deploy/.env   # set RELIKQUARY_PUBLISHER_PASSWORD and RELIKQUARY_DB_PASSWORD
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.postgres.yml \
+#                  --env-file deploy/.env up -d
+#
+# The backend waits for Postgres to be healthy before starting; Hibernate creates the schema on first boot.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${RELIKQUARY_DB_NAME:-relikquary}
+      POSTGRES_USER: ${RELIKQUARY_DB_USER:-relikquary}
+      POSTGRES_PASSWORD: ${RELIKQUARY_DB_PASSWORD:?set RELIKQUARY_DB_PASSWORD in deploy/.env}
+      # Use a sub-directory so the volume mount root isn't the data directory.
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - relikquary-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${RELIKQUARY_DB_USER:-relikquary} -d ${RELIKQUARY_DB_NAME:-relikquary}"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    # Merged onto the base backend service: switch persistence to the postgres service above.
+    environment:
+      RELIKQUARY_PERSISTENCE_BACKEND: postgres
+      RELIKQUARY_DB_URL: jdbc:postgresql://postgres:5432/${RELIKQUARY_DB_NAME:-relikquary}
+      RELIKQUARY_DB_USER: ${RELIKQUARY_DB_USER:-relikquary}
+      RELIKQUARY_DB_PASSWORD: ${RELIKQUARY_DB_PASSWORD:?set RELIKQUARY_DB_PASSWORD in deploy/.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  relikquary-postgres:

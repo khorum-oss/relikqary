@@ -50,7 +50,7 @@ class PersistenceConfig(private val properties: PersistenceProperties) {
     }
 
     private fun postgresDataSource(): DataSource {
-        val url = properties.postgres.url
+        val url = properties.postgres.url?.takeIf { it.isNotBlank() }
             ?: error("relikquary.persistence.backend=postgres requires relikquary.persistence.postgres.url")
         return DataSourceBuilder.create()
             .driverClassName("org.postgresql.Driver")

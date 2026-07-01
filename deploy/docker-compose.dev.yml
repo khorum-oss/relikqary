@@ -1,0 +1,73 @@
+# Local development stack for Relikquary (feature 016): PostgreSQL + backend (built from source, auth
+# OFF) + frontend. Everything self-contained with throwaway dev credentials — no secrets to set.
+#
+#   docker compose -f deploy/docker-compose.dev.yml up --build
+#
+#   API / Maven repos : http://localhost:8080/<repo>/...
+#   UI                : http://localhost:8081
+#   PostgreSQL        : localhost:5432  (db=relikquary user=relikquary password=relikquary)
+#
+# Iterating on the app itself? Run only Postgres here and start the backend from your IDE / Gradle so you
+# get fast rebuilds:
+#   docker compose -f deploy/docker-compose.dev.yml up -d postgres
+#   RELIKQUARY_PERSISTENCE_BACKEND=postgres \
+#   RELIKQUARY_DB_URL=jdbc:postgresql://localhost:5432/relikquary \
+#   RELIKQUARY_DB_USER=relikquary RELIKQUARY_DB_PASSWORD=relikquary \
+#     ./gradlew :backend:bootRun
+#
+# NOTE: auth is disabled for convenience — do NOT use this file to expose a real server.
+name: relikquary-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: relikquary
+      POSTGRES_USER: relikquary
+      # Throwaway dev credential; override via the environment if you like.
+      POSTGRES_PASSWORD: ${RELIKQUARY_DB_PASSWORD:-relikquary}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - relikquary-dev-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relikquary -d relikquary"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/backend.Dockerfile
+    environment:
+      # Dev only: no authentication, so anyone can publish/resolve/manage locally.
+      RELIKQUARY_SECURITY_ENABLED: "false"
+      RELIKQUARY_STORAGE_ROOT: /data
+      RELIKQUARY_PERSISTENCE_BACKEND: postgres
+      RELIKQUARY_DB_URL: jdbc:postgresql://postgres:5432/relikquary
+      RELIKQUARY_DB_USER: relikquary
+      RELIKQUARY_DB_PASSWORD: ${RELIKQUARY_DB_PASSWORD:-relikquary}
+    ports:
+      - "8080:8080"
+    volumes:
+      - relikquary-dev-store:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+    environment:
+      RELIKQUARY_BACKEND: http://backend:8080
+    ports:
+      - "8081:8080"
+    depends_on:
+      - backend
+
+volumes:
+  relikquary-dev-store:
+  relikquary-dev-postgres:
