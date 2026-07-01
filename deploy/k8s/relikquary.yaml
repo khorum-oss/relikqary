@@ -1,5 +1,6 @@
-# Relikquary on Kubernetes (feature 013) — a general starting-point manifest to apply and adapt.
-# Split deployment: backend (API) + frontend (UI), filesystem storage on a PVC (single replica).
+# Relikquary on Kubernetes (feature 013 + 016) — a general starting-point manifest to apply and adapt.
+# Split deployment: backend (API) + frontend (UI) + PostgreSQL (application state). Artifact storage is
+# on a PVC (single replica); tokens/users/settings/history live in PostgreSQL.
 # Apply into your chosen namespace:  kubectl apply -n <ns> -f deploy/k8s/relikquary.yaml
 #
 # IMAGES: this project ships artifacts only (no registry push). Build the images and make them available
@@ -20,6 +21,12 @@ data:
   RELIKQUARY_STORAGE_ROOT: "/data"
   RELIKQUARY_SECURITY_USERS_0_USERNAME: "publisher"
   RELIKQUARY_SECURITY_USERS_0_ROLES_0: "PUBLISH"
+  # Application state (tokens/users/settings/history) in PostgreSQL (feature 016). The password comes
+  # from the Secret below. To use embedded SQLite instead (single replica only), set the backend to
+  # "sqlite", set RELIKQUARY_DB_PATH to a path on the data PVC, and delete the postgres resources.
+  RELIKQUARY_PERSISTENCE_BACKEND: "postgres"
+  RELIKQUARY_DB_URL: "jdbc:postgresql://relikquary-postgres:5432/relikquary"
+  RELIKQUARY_DB_USER: "relikquary"
   # Upstream proxy defaults (override if you mirror them internally):
   RELIKQUARY_MAVEN_CENTRAL_URL: "https://repo1.maven.org/maven2"
   RELIKQUARY_GRADLE_PLUGIN_PORTAL_URL: "https://plugins.gradle.org/m2/"
@@ -37,6 +44,9 @@ type: Opaque
 stringData:
   # PLACEHOLDERS — replace before use. The password needs an encoder prefix ({noop}.. or {bcrypt}..).
   RELIKQUARY_SECURITY_USERS_0_PASSWORD: "{noop}changeme"
+  # PostgreSQL password — shared by the postgres container (POSTGRES_PASSWORD) and the backend
+  # (RELIKQUARY_DB_PASSWORD). Replace before use.
+  RELIKQUARY_DB_PASSWORD: "changeme"
   # Only used when RELIKQUARY_STORAGE_BACKEND=s3:
   RELIKQUARY_S3_ACCESS_KEY: "changeme"
   RELIKQUARY_S3_SECRET_KEY: "changeme"
@@ -51,6 +61,104 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+# --- PostgreSQL for application state (feature 016). Delete these three resources if you switch the
+# --- backend to embedded SQLite (see the ConfigMap note).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: relikquary-postgres-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: relikquary-postgres
+  labels:
+    app.kubernetes.io/name: relikquary
+    app.kubernetes.io/component: postgres
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: relikquary
+      app.kubernetes.io/component: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: relikquary
+        app.kubernetes.io/component: postgres
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70 # the alpine postgres user
+        fsGroup: 70
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "relikquary"
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: relikquary-config
+                  key: RELIKQUARY_DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: relikquary-secrets
+                  key: RELIKQUARY_DB_PASSWORD
+            # Sub-directory so the volume mount root isn't the data directory.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "relikquary", "-d", "relikquary"]
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "relikquary", "-d", "relikquary"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: relikquary-postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: relikquary-postgres
+spec:
+  selector:
+    app.kubernetes.io/name: relikquary
+    app.kubernetes.io/component: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -78,6 +186,12 @@ spec:
         runAsNonRoot: true
         # Make the PVC group-writable by the non-root container user.
         fsGroup: 1000
+      # Wait for PostgreSQL before starting so the app doesn't crash-loop on first apply. Remove this
+      # init container if you switch the backend to embedded SQLite.
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z relikquary-postgres 5432; do echo waiting for postgres; sleep 2; done"]
       containers:
         - name: backend
           image: relikquary-backend:local

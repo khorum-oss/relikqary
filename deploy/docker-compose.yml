@@ -20,6 +20,9 @@ services:
       RELIKQUARY_SECURITY_USERS_0_ROLES_0: PUBLISH
       # Filesystem storage on the persistent volume below.
       RELIKQUARY_STORAGE_ROOT: /data
+      # Application state (tokens/users/settings/history) — default embedded SQLite, on its OWN volume
+      # (kept out of the artifact store). For PostgreSQL instead, layer docker-compose.postgres.yml.
+      RELIKQUARY_DB_PATH: /var/lib/relikquary/relikquary.db
       # --- S3 alternative: comment out the volume + RELIKQUARY_STORAGE_ROOT above and uncomment these ---
       # RELIKQUARY_STORAGE_BACKEND: s3
       # RELIKQUARY_S3_ENDPOINT: ${RELIKQUARY_S3_ENDPOINT}
@@ -29,6 +32,7 @@ services:
       # RELIKQUARY_S3_SECRET_KEY: ${RELIKQUARY_S3_SECRET_KEY}
     volumes:
       - relikquary-store:/data
+      - relikquary-db:/var/lib/relikquary
     ports:
       - "8080:8080"
     healthcheck:
@@ -57,9 +61,11 @@ services:
 # Replace both services above with:
 #   relikquary:
 #     build: { context: .., dockerfile: deploy/combined.Dockerfile }
-#     environment: { RELIKQUARY_SECURITY_USERS_0_USERNAME: ..., RELIKQUARY_SECURITY_USERS_0_PASSWORD: ..., RELIKQUARY_SECURITY_USERS_0_ROLES_0: PUBLISH, RELIKQUARY_STORAGE_ROOT: /data }
-#     volumes: [ "relikquary-store:/data" ]
+#     environment: { RELIKQUARY_SECURITY_USERS_0_USERNAME: ..., RELIKQUARY_SECURITY_USERS_0_PASSWORD: ..., RELIKQUARY_SECURITY_USERS_0_ROLES_0: PUBLISH, RELIKQUARY_STORAGE_ROOT: /data, RELIKQUARY_DB_PATH: /var/lib/relikquary/relikquary.db }
+#     volumes: [ "relikquary-store:/data", "relikquary-db:/var/lib/relikquary" ]
 #     ports: [ "8080:8080" ]   # API at /, UI at /ui
+# (Layer docker-compose.postgres.yml here too for PostgreSQL app-state.)
 
 volumes:
   relikquary-store:
+  relikquary-db:

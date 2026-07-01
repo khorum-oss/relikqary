@@ -64,4 +64,16 @@ class PersistenceConfigBeansTest {
         val error = assertThrows(IllegalStateException::class.java) { config.dataSource() }
         assertEquals(true, error.message!!.contains("url"))
     }
+
+    @Test
+    fun `postgres with a blank url fails fast`() {
+        // A blank url arrives when RELIKQUARY_DB_URL is unset but backend=postgres was selected.
+        val config = PersistenceConfig(
+            PersistenceProperties(
+                backend = PersistenceProperties.Backend.POSTGRES,
+                postgres = PersistenceProperties.Postgres(url = "  "),
+            ),
+        )
+        assertThrows(IllegalStateException::class.java) { config.dataSource() }
+    }
 }

@@ -9,10 +9,11 @@ relikquary:
     backend: ${RELIKQUARY_PERSISTENCE_BACKEND:sqlite}
     sqlite:
       path: ${RELIKQUARY_DB_PATH:relikquary.db}
-    # postgres:
-    #   url: ${RELIKQUARY_DB_URL:}            # e.g. jdbc:postgresql://db:5432/relikquary
-    #   username: ${RELIKQUARY_DB_USER:}
-    #   password: ${RELIKQUARY_DB_PASSWORD:}
+    postgres:
+      # Only used when backend=postgres; blank otherwise. e.g. jdbc:postgresql://db:5432/relikquary
+      url: ${RELIKQUARY_DB_URL:}
+      username: ${RELIKQUARY_DB_USER:}
+      password: ${RELIKQUARY_DB_PASSWORD:}
 
   # Named repositories, each addressed by a path prefix (/{repo}/...). There is no implicit
   # repository at the root. A repository's kind selects how it resolves:
