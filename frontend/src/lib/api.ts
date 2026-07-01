@@ -135,8 +135,49 @@ export interface CatalogResponse {
   truncated: boolean;
 }
 
+/** An API token as listed — never carries the secret (feature 016, Phase 3). */
+export interface TokenSummary {
+  id: string;
+  name: string;
+  owner: string;
+  scope: 'read' | 'publish';
+  createdAt: string;
+  lastUsedAt?: string | null;
+  revoked: boolean;
+}
+
+/** The one-time response to creating a token — `secret` is shown only here. */
+export interface CreatedToken {
+  id: string;
+  name: string;
+  scope: string;
+  createdAt: string;
+  secret: string;
+}
+
 export function listRepositories(): Promise<RepositorySummary[]> {
   return getJson('/api/repositories');
+}
+
+/** Lists all API tokens (admin; requires the PUBLISH role). */
+export function listTokens(): Promise<TokenSummary[]> {
+  return getJson('/api/admin/tokens');
+}
+
+/** Creates a token; the response's `secret` is returned only once. Throws [ApiError] on failure. */
+export async function createToken(name: string, scope: 'read' | 'publish'): Promise<CreatedToken> {
+  const res = await fetch(
+    '/api/admin/tokens',
+    authed({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, scope }) }),
+  );
+  if (!res.ok) throw new ApiError(res.status);
+  return (await res.json()) as CreatedToken;
+}
+
+/** Revokes a token by id. Throws [ApiError] on failure. */
+export async function revokeToken(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/tokens/${id}`, authed({ method: 'DELETE' }));
+  if (!res.ok) throw new ApiError(res.status);
 }
 
 /** Read-only Dashboard stats (repository count, total objects, storage bytes). */
